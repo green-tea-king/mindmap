@@ -2,7 +2,7 @@
 <!--
   ============================================================
   心智圖編輯器 (Mind Map Editor) — 單檔 HTML
-  版次 Version : 4.0
+  版次 Version : 4.1
   最後更新 Updated: 2026-06-04
   ------------------------------------------------------------
   ⚠ 維護規範(任何人或 AI 接手修改本檔,都必須遵守):
@@ -14,6 +14,7 @@
      版次原則:小改 +0.1,大改 +1.0。畫面左上角會顯示目前版次與日期。
   ------------------------------------------------------------
   修改紀錄 Changelog(最新在最上):
+     2026-06-04  v4.1  分頁標題改為「Markdown心智圖」並加上 🧠 favicon;檔名改為 index.html(GitHub Pages)。
      2026-06-04  v4.0  待辦按鈕只留 ☑ emoji(去文字);末端 ✕ 改為一次清除「圖示 + 待辦」。
      2026-06-04  v3.9  配色色球改為原生 color picker(可挑任意顏色,選色器同步目前選取節點顏色)。
      2026-06-04  v3.8  「編輯」視窗按鈕重新排序:父節點 → 同層 → 子節點(刪除/復原維持在後)。
@@ -50,7 +51,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>心智圖編輯器 · Markdown</title>
+<title>Markdown心智圖</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+
 <style>
   :root{
     --bg:#f4f6f9; --panel:#ffffff; --line:#c2ccd8; --txt:#1f2933;
@@ -268,7 +271,7 @@
 <script>
 "use strict";
 //===================== 版次資訊(修改本檔請同步更新,並更新檔頭註解與 Changelog)=====================
-const APP_VERSION = '4.0';        // 版次:小改 +0.1,大改 +1.0
+const APP_VERSION = '4.1';        // 版次:小改 +0.1,大改 +1.0
 const APP_DATE    = '2026-06-04'; // 最後更新日期 YYYY-MM-DD
 { const v=document.getElementById('appVer'); if(v) v.textContent='v'+APP_VERSION+' · '+APP_DATE; }
 
