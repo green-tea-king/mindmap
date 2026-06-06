@@ -2,7 +2,7 @@
 <!--
   ============================================================
   心智圖編輯器 (Mind Map Editor) — 單檔 HTML
-  版次 Version : 4.1
+  版次 Version : 6.1
   最後更新 Updated: 2026-06-04
   ------------------------------------------------------------
   ⚠ 維護規範(任何人或 AI 接手修改本檔,都必須遵守):
@@ -14,6 +14,33 @@
      版次原則:小改 +0.1,大改 +1.0。畫面左上角會顯示目前版次與日期。
   ------------------------------------------------------------
   修改紀錄 Changelog(最新在最上):
+     2026-06-04  v6.1  所有工具列整合進右鍵選單(含子選單:文字格式/清單/圖示/檔案/檢視/主題);隱藏浮動工具列、僅留左上 brand。
+                        實作上保留隱藏的工具列元素,選單呼叫既有函式/觸發隱藏按鈕,邏輯不變。
+     2026-06-04  v6.0  「編輯」窗移除 刪除/復原 按鈕(Del 與 Ctrl+Z、右鍵選單仍可用)。
+     2026-06-04  v5.9  介面預設改為淺色(不再跟隨系統;手動切換深色仍會記住)。
+     2026-06-04  v5.8  名稱改為「MD心智圖」;深色介面時把主題中心色自動調亮(避免中心節點與深背景融在一起),切換深淺會即時重新上色。
+     2026-06-04  v5.7  名稱改為「MK心智圖」(分頁標題與左上 brand 兩處)。
+     2026-06-04  v5.6  新增 淺色/深色 介面切換(檢視窗「🌙 深色」鈕;預設跟隨系統、選擇會記住);節點顏色仍由配色主題決定。
+     2026-06-04  v5.5  所有支援功能上工具列:文字窗加 S 刪除線 / 🔗 連結;新增「清單」窗(待辦/有序 1./引用 ❝);
+                        視窗組成變更故重設記憶位置(key→mm-fwpos5)。
+     2026-06-04  v5.4  新增 有序清單 1./1)(顯示序號、匯出回 N.)、* + 清單符號(視為子節點)、引用塊 >(斜體備註)。
+     2026-06-04  v5.3  新增原生連結 [文字](網址) 與裸網址自動連結(底線樣式、點擊開新分頁、防雙開、避開選取/拖曳/編輯)、刪除線 ~~。
+     2026-06-04  v5.2  工具列重新分組:「標記」拆成「文字」(B/I/待辦)與「圖示」(emoji+清除);主題維持獨立;
+                        視窗組成變更故重設記憶位置(key→mm-fwpos4)。
+     2026-06-04  v5.1  修正:Changelog 文字裡的註解結尾符號讓本檔頭註解提前關閉、整段顯示成文字;已改寫該文字。
+     2026-06-04  v5.0  改為 100% 原生 Markdown:匯入/匯出皆不含顏色(移除 f/b/t 與 mm、c 兩種顏色註解);
+                        顏色改由主題在 render() 即時套用(純視覺、不存檔,新節點自動上色);
+                        移除手動「配色」視窗與「純文字」匯出按鈕;主題選單僅切換顯示。
+     2026-06-04  v4.8  圖示原生化:匯出改為把 emoji 放進文字(- ⭐ 文字),不再用 ic= 註解;載入自動抽回徽章;
+                        向下相容舊 ic=。至此 mm 註解只剩「顏色」無原生對應。
+     2026-06-04  v4.7  新增 GFM 任務清單([ ]/[x],匯出改原生語法、向下相容舊 ck)、Emoji 短碼(:fire: 等)、
+                        粗體/斜體工具列 B/I 與 Ctrl+B/I、***粗斜*** 行內樣式。
+     2026-06-04  v4.6  節點文字支援行內 Markdown:**粗體**、*斜體*(含 __/_);顯示轉 HTML,編輯/匯出仍原始語法(先跳脫 HTML)。
+     2026-06-04  v4.5  修正節點重疊:父節點比子節點群寬/高時會溢出 slot 壓到鄰居;改為子群置中於 slot。
+     2026-06-04  v4.4  匯出檔名:由檔案載入時沿用原檔名(非載入則用根標題);新建會清掉記住的檔名。
+     2026-06-04  v4.3  連線改為「全層級一致」以開關鈕為界拆色:上段 stub=父色、下段(幹線+腿)=子色;
+                        多子不同色時用遠→近順序繪製,各分支幹線段顯示自己的顏色(取消中心特例)。
+     2026-06-04  v4.2  深層節點的支線「幹線段」也改用子節點色(原為父色),只剩中心維持中心色;父stub仍父色。
      2026-06-04  v4.1  分頁標題改為「Markdown心智圖」並加上 🧠 favicon;檔名改為 index.html(GitHub Pages)。
      2026-06-04  v4.0  待辦按鈕只留 ☑ emoji(去文字);末端 ✕ 改為一次清除「圖示 + 待辦」。
      2026-06-04  v3.9  配色色球改為原生 color picker(可挑任意顏色,選色器同步目前選取節點顏色)。
@@ -51,7 +78,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Markdown心智圖</title>
+<title>MD心智圖</title>
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#232830">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
 
 <style>
@@ -82,13 +111,6 @@
   button.tb.primary{background:var(--accent);color:#fff;}
   button.tb.primary:hover{filter:brightness(1.08);}
   button.tb small{opacity:.5;font-size:11px;margin-left:3px;}
-  .seg{display:inline-flex;background:#fff;border:1px solid #dfe5ee;border-radius:8px;overflow:hidden;}
-  .seg .tgt{border:none;background:transparent;padding:5px 11px;font-size:13px;cursor:pointer;color:var(--txt);transition:.12s;}
-  .seg .tgt:hover{background:var(--accent2);}
-  .seg .tgt.active{background:var(--accent);color:#fff;}
-  #palette{display:inline-flex;flex-wrap:nowrap;align-items:center;padding:0 2px;}
-  #palette .cpick{width:34px;height:26px;border:1px solid #dfe5ee;border-radius:7px;background:#fff;cursor:pointer;padding:2px;}
-  #palette .cpick:hover{border-color:var(--accent);}
   #iconpal{display:inline-flex;flex-wrap:nowrap;align-items:center;}
   #themeSel{border:1px solid #dfe5ee;background:#fff;border-radius:9px;padding:7px 9px;font-size:13px;font-family:inherit;cursor:pointer;color:var(--txt);}
   #themeSel:hover{border-color:var(--accent);}
@@ -107,6 +129,11 @@
   .node:hover{border-color:var(--accent);}
   .node .ckbox{cursor:pointer;margin-right:5px;font-size:1.05em;line-height:1;}
   .node .nicon{margin-right:4px;}
+  .node .norder{margin-right:5px;font-weight:700;opacity:.75;}
+  .node.quote{font-style:italic;}
+  .node.quote .ntext{opacity:.85;}
+  .node a.mlink{color:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer;}
+  .node a.mlink:hover{text-decoration-thickness:2px;}
   .node.done{opacity:.6;}
   .iconbtn{font-size:15px;padding:4px 6px;line-height:1;}
   .node.sel{border-color:var(--accent) !important;box-shadow:0 0 0 2px #fff,0 0 0 5px var(--accent) !important;z-index:4;}
@@ -157,25 +184,42 @@
     border:1px solid var(--line);border-radius:9px;padding:5px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
   .zoombar button{width:30px;height:30px;border:none;background:transparent;font-size:17px;cursor:pointer;border-radius:6px;color:var(--txt);}
   .zoombar button:hover{background:var(--accent2);}
-  .swatch{display:inline-block;width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(0,0,0,.12);
-    cursor:pointer;vertical-align:middle;margin:0 1px;transition:transform .1s;}
-  .swatch:hover{transform:scale(1.25);}
-  #ctxmenu{position:fixed;display:none;background:#fff;border:1px solid var(--line);border-radius:10px;
-    box-shadow:0 10px 30px rgba(20,40,80,.20);padding:5px;z-index:200;min-width:184px;font-size:13px;}
-  #ctxmenu button{display:flex;width:100%;align-items:center;gap:8px;border:none;background:transparent;
+  /* 所有功能整合到右鍵選單:隱藏功能工具列,僅保留左上 brand(版次) */
+  .floatwin:not(#fwBrand){ display:none !important; }
+  .ctxmenu{position:fixed;display:none;background:#fff;border:1px solid var(--line);border-radius:10px;
+    box-shadow:0 10px 30px rgba(20,40,80,.20);padding:5px;z-index:200;min-width:188px;max-height:92vh;overflow:auto;font-size:13px;}
+  .ctxmenu button{display:flex;width:100%;align-items:center;gap:8px;border:none;background:transparent;
     padding:7px 11px;border-radius:7px;cursor:pointer;text-align:left;color:var(--txt);white-space:nowrap;font-family:inherit;}
-  #ctxmenu button:hover{background:var(--accent2);}
-  #ctxmenu button small{margin-left:auto;opacity:.45;font-size:11px;padding-left:14px;}
-  #ctxmenu button:disabled{opacity:.38;cursor:default;}
-  #ctxmenu button:disabled:hover{background:transparent;}
-  #ctxmenu .mdiv{height:1px;background:var(--line);margin:4px 4px;}
+  .ctxmenu button:hover{background:var(--accent2);}
+  .ctxmenu button small{margin-left:auto;opacity:.55;font-size:11px;padding-left:14px;}
+  .ctxmenu button:disabled{opacity:.45;cursor:default;}
+  .ctxmenu button:disabled:hover{background:transparent;}
+  .ctxmenu .mdiv{height:1px;background:var(--line);margin:4px 4px;}
+  .ctxmenu .ctxhdr{font-size:11px;opacity:.6;padding:4px 11px 2px;cursor:default;}
+  /* ===== 深色介面(切換 App 外觀;節點顏色仍由配色主題決定)===== */
+  html.dark{ --bg:#14171c; --panel:#232830; --line:#39414d; --txt:#e6e9ee; --accent2:#2a3340; color-scheme:dark; }
+  html.dark #viewport{ background-color:#161a20;
+    background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='40'%20height='40'%3E%3Cg%20fill='none'%20stroke='%23323a45'%20stroke-width='1'%20stroke-dasharray='4,4'%3E%3Cpath%20d='M0%200H40'/%3E%3Cpath%20d='M0%200V40'/%3E%3C/g%3E%3C/svg%3E"); }
+  html.dark .fwhead{ background:#2b313b; color:#aeb6c2; }
+  html.dark .fwcollapse{ color:#aeb6c2; }
+  html.dark .fwcollapse:hover{ background:rgba(255,255,255,.12); }
+  html.dark .fwbrand{ color:#6ea0ff; }
+  html.dark #themeSel{ background:#2b313b; border-color:var(--line); color:var(--txt); }
+  html.dark #searchBar{ background:var(--panel); }
+  html.dark #searchInput{ color:var(--txt); background:transparent; }
+  html.dark #searchBar button{ background:#2b313b; color:var(--txt); }
+  html.dark .ctxmenu{ background:var(--panel); }
+  html.dark #status{ background:rgba(20,23,28,.85); color:#aeb6c2; }
+  html.dark .hint{ background:rgba(20,23,28,.6); color:#8b94a3; }
+  html.dark #empty{ color:#8b94a3; }
+  html.dark #empty b{ color:#aeb6c2; }
 </style>
 </head>
 <body>
 <div id="app">
   <div id="viewport">
     <div id="canvas"><svg id="edges"></svg></div>
-    <div id="empty"><b>還沒有內容</b><div>點「開啟 .md」或把 .md 檔拖進來,也可以按「新建」</div></div>
+    <div id="empty"><b>還沒有內容</b><div>在空白處按右鍵 →「檔案 → 開啟 / 新建」,或把 .md 檔拖進來</div></div>
     <div id="drop">放開以匯入 Markdown</div>
     <div id="status"></div>
     <div id="searchBar">
@@ -192,18 +236,17 @@
     </div>
   </div>
 </div>
-<div id="ctxmenu"></div>
+<div id="ctxmenu" class="ctxmenu"></div>
 
 <!-- 浮動工具視窗(可拖曳標題列移動,點 — 收合) -->
-<div class="floatwin" id="fwBrand"><div class="fwhead fwbrand">🧠 心智圖</div><div class="fwver" id="appVer"></div></div>
+<div class="floatwin" id="fwBrand"><div class="fwhead fwbrand">🧠 MD心智圖</div><div class="fwver" id="appVer"></div></div>
 
 <div class="floatwin" id="fwFile">
   <div class="fwhead">檔案<button class="fwcollapse" title="收合">–</button></div>
   <div class="fwbody">
     <button class="tb" id="btnNew" title="新建心智圖">✨ 新建</button>
     <button class="tb primary" id="btnOpen" title="開啟 Markdown (.md)">📂 開啟</button>
-    <button class="tb" id="btnExport" title="匯出 Markdown(含顏色標記)">💾 匯出</button>
-    <button class="tb" id="btnExportClean" title="匯出純文字 .md(不含顏色/圖示標記)">📄 純文字</button>
+    <button class="tb" id="btnExport" title="匯出 Markdown(純原生,不含顏色)">💾 匯出</button>
   </div>
 </div>
 
@@ -213,8 +256,6 @@
     <button class="tb" id="btnParent" title="新增父節點(在選取節點上方插入一層)">＋ 父節點 <small>⇧Tab</small></button>
     <button class="tb" id="btnSibling" title="新增同層節點">＋ 同層 <small>Enter</small></button>
     <button class="tb" id="btnChild" title="新增子節點">＋ 子節點 <small>Tab</small></button>
-    <button class="tb" id="btnDelete" title="刪除節點">🗑 刪除 <small>Del</small></button>
-    <button class="tb" id="btnUndo" title="復原">↶ 復原 <small>⌃Z</small></button>
   </div>
 </div>
 
@@ -224,27 +265,33 @@
     <button class="tb" id="btnFit" title="置中縮放">🎯 置中</button>
     <button class="tb" id="btnSearch" title="搜尋節點">🔍 搜尋 <small>⌃F</small></button>
     <button class="tb" id="btnOrient" title="切換 橫式(往右)/ 直式(往下)版面">🔀 方向</button>
+    <button class="tb" id="btnDark" title="切換 淺色 / 深色 介面">🌙 深色</button>
     <button class="tb" id="btnResetUI" title="把工具視窗位置與收合狀態還原成預設">↺ 工具列歸位</button>
   </div>
 </div>
 
-<div class="floatwin" id="fwColor">
-  <div class="fwhead">配色<button class="fwcollapse" title="收合">–</button></div>
+<div class="floatwin" id="fwText">
+  <div class="fwhead">文字<button class="fwcollapse" title="收合">–</button></div>
   <div class="fwbody">
-    <span id="targetSel" class="seg">
-      <button class="tgt active" data-t="fill">底色</button>
-      <button class="tgt" data-t="border">外框</button>
-      <button class="tgt" data-t="text">文字</button>
-    </span>
-    <span id="palette"></span>
-    <button class="tb" id="btnClearColor" title="清除目前屬性顏色">✕</button>
+    <button class="tb" id="btnBold" title="粗體 **（Ctrl+B）" style="font-weight:800;">B</button>
+    <button class="tb" id="btnItalic" title="斜體 *（Ctrl+I）" style="font-style:italic;font-family:Georgia,'Times New Roman',serif;">I</button>
+    <button class="tb" id="btnStrike" title="刪除線 ~~" style="text-decoration:line-through;">S</button>
+    <button class="tb" id="btnLink" title="加連結 [文字](網址)">🔗</button>
   </div>
 </div>
 
-<div class="floatwin" id="fwMark">
-  <div class="fwhead">標記<button class="fwcollapse" title="收合">–</button></div>
+<div class="floatwin" id="fwList">
+  <div class="fwhead">清單<button class="fwcollapse" title="收合">–</button></div>
   <div class="fwbody">
-    <button class="tb iconbtn" id="btnTodo" title="切換待辦核取方塊">☑</button>
+    <button class="tb iconbtn" id="btnTodo" title="切換待辦核取方塊 [ ]/[x]">☑</button>
+    <button class="tb" id="btnOrdered" title="切換有序清單(顯示序號 1. 2. 3.)" style="font-weight:700;">1.</button>
+    <button class="tb" id="btnQuote" title="切換引用塊(備註樣式 >)">❝</button>
+  </div>
+</div>
+
+<div class="floatwin" id="fwIcon">
+  <div class="fwhead">圖示<button class="fwcollapse" title="收合">–</button></div>
+  <div class="fwbody">
     <span id="iconpal"></span>
     <button class="tb" id="btnClearIcon" title="清除圖示與待辦">✕</button>
   </div>
@@ -266,12 +313,12 @@
   </div>
 </div>
 
-<span class="hint">雙擊編輯 · 拖節點換掛載/順序 · 右鍵選單 · 滾輪縮放 · 拖背景平移 · Shift+滾輪水平捲動 · 拖工具列標題可移動</span>
+<span class="hint">🖱 右鍵叫出選單(全部功能在這)· 雙擊編輯 · 拖節點換掛載/順序 · 滾輪縮放 · 拖背景平移 · Shift+滾輪水平捲動</span>
 <input type="file" id="file" accept=".md,.markdown,.txt,text/markdown,text/plain" style="display:none">
 <script>
 "use strict";
 //===================== 版次資訊(修改本檔請同步更新,並更新檔頭註解與 Changelog)=====================
-const APP_VERSION = '4.1';        // 版次:小改 +0.1,大改 +1.0
+const APP_VERSION = '6.1';        // 版次:小改 +0.1,大改 +1.0
 const APP_DATE    = '2026-06-04'; // 最後更新日期 YYYY-MM-DD
 { const v=document.getElementById('appVer'); if(v) v.textContent='v'+APP_VERSION+' · '+APP_DATE; }
 
@@ -279,29 +326,31 @@ const APP_DATE    = '2026-06-04'; // 最後更新日期 YYYY-MM-DD
 let uidc = 0;
 const uid = () => 'n' + (Date.now().toString(36)) + (uidc++).toString(36);
 function makeNode(title){ return {id:uid(), title:title||'', children:[], collapsed:false, parent:null}; }
-// 由文字建立節點,並抽出顏色標記
-//   新格式 <!--mm:f=#fff;b=#000;t=#111-->(只含有設定的屬性)
-//   舊格式 <!--c:#rrggbb-->(視為底色,向下相容)
+// 由文字建立節點。顏色一律不從檔案讀(改由主題即時上色);仍去除舊版註解並相容讀舊 ic/ck。
 function nodeFrom(text){
   text = String(text);
-  let fill, border, tcol, icon, checked;
+  let icon, checked;
   let m = text.match(/\s*<!--mm:([^>]*)-->\s*$/);
   if(m){
     text = text.slice(0, m.index);
     m[1].split(';').forEach(kv=>{ const i=kv.indexOf('='); const k=kv.slice(0,i), v=kv.slice(i+1);
-      if(k==='f') fill=v; else if(k==='b') border=v; else if(k==='t') tcol=v;
-      else if(k==='ic') icon=v; else if(k==='ck') checked=(v==='1'); });
+      if(k==='ic') icon=v; else if(k==='ck') checked=(v==='1'); });   // f/b/t(顏色)忽略
   } else {
-    let o = text.match(/\s*<!--c:([#\w]+)-->\s*$/);
-    if(o){ text = text.slice(0, o.index); fill = o[1]; }
+    const o = text.match(/\s*<!--c:[#\w]+-->\s*$/);
+    if(o){ text = text.slice(0, o.index); }   // 舊顏色標記:去除但忽略
   }
-  const n = makeNode(text.replace(/\s+$/,''));
-  if(fill) n.fill=fill; if(border) n.border=border; if(tcol) n.text=tcol;
+  let title = text.replace(/\s+$/,'');
+  // GFM 任務清單:開頭 [ ] / [x] → 待辦勾選(原生語法,優先於舊的 ck 標記)
+  const tm = title.match(/^\[([ xX])\]\s+(.*)$/);
+  if(tm){ checked = (tm[1].toLowerCase()==='x'); title = tm[2]; }
+  // 圖示原生化:文字開頭若為內建圖示 emoji → 抽成徽章(有舊 ic= 則以 ic= 為準)
+  if(icon===undefined){ const im = title.match(LEAD_ICON_RE); if(im){ icon = im[1]; title = title.slice(im[0].length); } }
+  const n = makeNode(title);
   if(icon) n.icon=icon; if(checked!==undefined) n.checked=checked;
   return n;
 }
 function setParents(node, parent){ node.parent = parent||null; for(const c of node.children) setParents(c, node); }
-function cloneTree(node){ const n={id:node.id,title:node.title,fill:node.fill,border:node.border,text:node.text,icon:node.icon,checked:node.checked,collapsed:node.collapsed,children:node.children.map(cloneTree),parent:null}; return n; }
+function cloneTree(node){ const n={id:node.id,title:node.title,fill:node.fill,border:node.border,text:node.text,icon:node.icon,checked:node.checked,ordered:node.ordered,quote:node.quote,collapsed:node.collapsed,children:node.children.map(cloneTree),parent:null}; return n; }
 // 顏色工具
 function hexToRgb(c){ c=String(c).replace('#',''); if(c.length===3) c=c.split('').map(x=>x+x).join(''); const n=parseInt(c,16); return [(n>>16)&255,(n>>8)&255,n&255]; }
 function luminance(c){ try{ const [r,g,b]=hexToRgb(c); return (0.299*r+0.587*g+0.114*b)/255; }catch(e){ return 1; } }
@@ -313,6 +362,39 @@ function hslToHex(h,s,l){ s/=100; l/=100; const k=n=>(n+h/30)%12; const a=s*Math
   const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
   const hx=x=>Math.round(255*x).toString(16).padStart(2,'0'); return '#'+hx(f(0))+hx(f(8))+hx(f(4)); }
 function hasAnyColor(n){ return !!(n.fill||n.border||n.text) || n.children.some(hasAnyColor); }
+// Emoji 短碼對照(常用 + 內建圖示);可自行擴充
+const EMOJI={star:'⭐',fire:'🔥',white_check_mark:'✅',check:'✅',heavy_check_mark:'✔️',x:'❌',
+  exclamation:'❗',bangbang:'‼️',warning:'⚠️',question:'❓',grey_question:'❔',bulb:'💡',pushpin:'📌',
+  round_pushpin:'📍',dart:'🎯','+1':'👍',thumbsup:'👍','-1':'👎',thumbsdown:'👎',heart:'❤️',
+  broken_heart:'💔',red_circle:'🔴',green_circle:'🟢',large_blue_circle:'🔵',yellow_circle:'🟡',
+  white_circle:'⚪',black_circle:'⚫',bell:'🔔',rocket:'🚀',tada:'🎉',sparkles:'✨',zap:'⚡',boom:'💥',
+  sos:'🆘',ok:'🆗',new:'🆕',up:'🔼',down:'🔽',memo:'📝',pencil:'✏️',books:'📚',book:'📖',email:'📧',
+  phone:'📞',bug:'🐛',wrench:'🔧',hammer:'🔨',gear:'⚙️',lock:'🔒',unlock:'🔓',key:'🔑',mag:'🔍',
+  link:'🔗',flag:'🚩',triangular_flag:'🚩',trophy:'🏆',medal:'🏅',crown:'👑',thinking:'🤔',eyes:'👀',
+  muscle:'💪',clap:'👏',pray:'🙏',point_right:'👉',point_left:'👈',arrow_right:'➡️',arrow_left:'⬅️',
+  arrow_up:'⬆️',arrow_down:'⬇️',sunny:'☀️',cloud:'☁️',snowflake:'❄️',coffee:'☕',apple:'🍎',
+  gift:'🎁',moneybag:'💰',dollar:'💵',hourglass:'⏳',alarm_clock:'⏰',stopwatch:'⏱️',calendar:'📅',
+  date:'📆',smile:'😄',laughing:'😆',cry:'😢',angry:'😠',heart_eyes:'😍',sweat_smile:'😅',
+  fearful:'😨',sleeping:'😴',sunglasses:'😎',clipboard:'📋',chart:'📊',chart_up:'📈',chart_down:'📉',
+  hammer_and_wrench:'🛠️',construction:'🚧',no_entry:'⛔',recycle:'♻️',hot_pepper:'🌶️',seedling:'🌱'};
+// 行內 Markdown:粗體/斜體(** *、__ _、***)+ Emoji 短碼;先跳脫 HTML 再轉換(顯示用,編輯/匯出仍原始語法)
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function inlineMd(t){
+  let s = escHtml(t);
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');     // ***粗斜***
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');                  // **粗體**
+  s = s.replace(/(^|[^\w])___(.+?)___(?=[^\w]|$)/g, '$1<strong><em>$2</em></strong>'); // ___粗斜___
+  s = s.replace(/(^|[^\w])__(.+?)__(?=[^\w]|$)/g, '$1<strong>$2</strong>'); // __粗體__
+  s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');                              // *斜體*
+  s = s.replace(/(^|[^\w])_(.+?)_(?=[^\w]|$)/g, '$1<em>$2</em>');          // _斜體_
+  s = s.replace(/~~(.+?)~~/g, '<del>$1</del>');                            // ~~刪除線~~(GFM)
+  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,                              // [文字](網址) 連結
+        '<a href="$2" class="mlink" title="點擊開啟連結" rel="noopener">$1</a>');
+  s = s.replace(/(?<![">=])\bhttps?:\/\/[^\s<)]+/g,                        // 裸網址自動連結
+        m=>`<a href="${m}" class="mlink" title="點擊開啟連結" rel="noopener">${m}</a>`);
+  s = s.replace(/:([a-z0-9_+\-]+):/gi, (m,k)=> EMOJI[k.toLowerCase()] || m); // :fire: 等短碼
+  return s;
+}
 function isDescendant(node, maybeAncestor){ // true if node is descendant of maybeAncestor
   let p = node.parent; while(p){ if(p===maybeAncestor) return true; p=p.parent; } return false;
 }
@@ -350,13 +432,18 @@ function parseMarkdown(text){
       else { ensureRoot(); headingDepth = depth; attach(nodeFrom(h[2].trim()), depth); }
       continue;
     }
-    const b = line.match(/^(\s*)-\s+(.*)$/);
-    if(b){
-      ensureRoot();
-      const indent = Math.floor(b[1].replace(/\t/g,'  ').length/2);
-      attach(nodeFrom(b[2]), headingDepth + 1 + indent);
-      continue;
-    }
+    // 有序清單 1. / 1)
+    const ol = line.match(/^(\s*)\d+[.)]\s+(.*)$/);
+    if(ol){ ensureRoot(); const indent=Math.floor(ol[1].replace(/\t/g,'  ').length/2);
+      const nd=nodeFrom(ol[2]); nd.ordered=true; attach(nd, headingDepth + 1 + indent); continue; }
+    // 無序清單 - * +
+    const b = line.match(/^(\s*)[-*+]\s+(.*)$/);
+    if(b){ ensureRoot(); const indent=Math.floor(b[1].replace(/\t/g,'  ').length/2);
+      attach(nodeFrom(b[2]), headingDepth + 1 + indent); continue; }
+    // 引用塊 >
+    const q = line.match(/^(\s*)>\s+(.*)$/);
+    if(q){ ensureRoot(); const indent=Math.floor(q[1].replace(/\t/g,'  ').length/2);
+      const nd=nodeFrom(q[2]); nd.quote=true; attach(nd, headingDepth + 1 + indent); continue; }
     // 續行:併入上一個節點標題
     if(last) last.title += '\n' + line.trim();
   }
@@ -365,29 +452,30 @@ function parseMarkdown(text){
   return rootsOut;
 }
 
-//===================== Markdown 輸出(與既有檔案風格一致) =====================
-function toMarkdown(rootsArr, clean){
+//===================== Markdown 輸出(100% 原生:標題/清單/任務清單/粗斜體/emoji;不含顏色)=====================
+function toMarkdown(rootsArr){
   if(!Array.isArray(rootsArr)) rootsArr = [rootsArr];
   const out = [];
   const HEADING_LIMIT = 2;
-  const mark = node => {
-    if(clean) return '';
-    const p=[]; if(node.fill)p.push('f='+node.fill); if(node.border)p.push('b='+node.border); if(node.text)p.push('t='+node.text);
-    if(node.icon)p.push('ic='+node.icon); if(node.checked!==undefined)p.push('ck='+(node.checked?1:0));
-    return p.length ? (' <!--mm:'+p.join(';')+'-->') : '';
-  };
+  const box = node => node.checked===undefined ? '' : (node.checked ? '[x] ' : '[ ] ');  // GFM 任務清單
   function emit(node, prefix, cont){
     const ls = (node.title||'').split('\n');
-    out.push(prefix + ls[0] + mark(node));
+    const ic = node.icon ? node.icon+' ' : '';   // 圖示 = 原生 emoji 放進文字
+    out.push(prefix + box(node) + ic + ls[0]);
     for(let i=1;i<ls.length;i++) out.push(cont + ls[i]);
   }
   function bullet(node, indent){
     const ind = '  '.repeat(indent);
-    emit(node, ind+'- ', ind+'  ');
+    let marker;
+    if(node.quote) marker = '> ';
+    else if(node.ordered){ const i=(node.parent?node.parent.children.indexOf(node):0)+1; marker = i+'. '; }
+    else marker = '- ';
+    emit(node, ind+marker, ind+'  ');
     for(const c of node.children) bullet(c, indent+1);
   }
   function rec(node, depth){
-    if(depth<=HEADING_LIMIT && node.children.length){
+    // 標題層級;但有序/引用節點一律以清單輸出以保留語法
+    if(depth<=HEADING_LIMIT && node.children.length && !node.ordered && !node.quote){
       emit(node, '#'.repeat(depth+2)+' ', '');
       out.push('');
       for(const c of node.children) rec(c, depth+1);
@@ -426,8 +514,10 @@ function layout(node, mainPos){
       n._sub=Math.max(s,n._h); return n._sub; }
     function place(n, depth, top){ n._x=mainPos[depth];          // 同層靠左齊頭
       const ch=visibleChildren(n);
-      if(!ch.length){ n._y=top+n._h/2; return; }
-      let t=top, first=null, last=null;
+      if(!ch.length){ n._y=top+n._sub/2; return; }
+      let span=0; for(const c of ch) span+=c._sub+VGAP; span-=VGAP;   // 子節點群總高
+      let t=top+Math.max(0,(n._sub-span)/2);                          // node 較高時:子群置中於 slot
+      let first=null, last=null;
       for(const c of ch){ place(c,depth+1,t); first=first||c; last=c; t+=c._sub+VGAP; }
       n._y=(first._y+last._y)/2; }
     subSize(node); place(node,0,0);
@@ -438,8 +528,10 @@ function layout(node, mainPos){
       n._sub=Math.max(s,n._w); return n._sub; }
     function place(n, depth, left){ n._y=mainPos[depth]+n._h/2;  // 同層靠上齊頭(列線對齊上緣)
       const ch=visibleChildren(n);
-      if(!ch.length){ n._x=left; return; }
-      let l=left, first=null, last=null;
+      if(!ch.length){ n._x=left+(n._sub-n._w)/2; return; }
+      let span=0; for(const c of ch) span+=c._sub+COLGAP; span-=COLGAP;  // 子節點群總寬
+      let l=left+Math.max(0,(n._sub-span)/2);                            // node 較寬時:子群置中於 slot
+      let first=null, last=null;
       for(const c of ch){ place(c,depth+1,l); first=first||c; last=c; l+=c._sub+COLGAP; }
       const cf=first._x+first._w/2, cl=last._x+last._w/2;
       n._x=(cf+cl)/2 - n._w/2; }
@@ -461,6 +553,8 @@ function render(){
   svg.innerHTML='';
   if(!roots.length){ applyTransform(); statusEl.textContent=''; return; }
   canvas.classList.toggle('vert', orient==='v');
+  // 顏色純由主題即時套用(視覺辨識用,不存檔);新節點也會自動上色
+  for(const r of roots) colorizeTheme(r, THEMES[curTheme] || THEMES[DEFAULT_THEME]);
 
   // 收集每個根的可見節點;list = 全部節點(供建立 DOM / 連線 / 開關鈕)
   const groups = roots.map(r=>({root:r, list:measure(r)}));
@@ -472,6 +566,10 @@ function render(){
     d.className = 'node lv' + Math.min(it.depth,6) + (it.depth<=2 ? (' d'+it.depth) : '');
     d.dataset.id = it.node.id;
     const n = it.node;
+    if(n.quote) d.classList.add('quote');   // 引用塊樣式
+    // 有序清單序號(顯示在同層中的位置)
+    if(n.ordered){ const i=(n.parent?n.parent.children.indexOf(n):0)+1;
+      const od=document.createElement('span'); od.className='norder'; od.textContent=i+'.'; d.appendChild(od); }
     // checkbox(待辦)
     if(n.checked!==undefined){
       const cb=document.createElement('span'); cb.className='ckbox'+(n.checked?' on':''); cb.textContent=n.checked?'☑':'☐';
@@ -482,7 +580,7 @@ function render(){
     // icon(圖示)
     if(n.icon){ const ic=document.createElement('span'); ic.className='nicon'; ic.textContent=n.icon; d.appendChild(ic); }
     // title
-    const tx=document.createElement('span'); tx.className='ntext'; tx.textContent=n.title||' ';
+    const tx=document.createElement('span'); tx.className='ntext'; tx.innerHTML = n.title ? inlineMd(n.title) : ' ';
     if(n.checked) tx.style.textDecoration='line-through';
     d.appendChild(tx);
     if(n.checked) d.classList.add('done');
@@ -556,39 +654,40 @@ function render(){
   const RAD = 18;          // 轉角圓角半徑
   const TRUNK = TRUNK_GAP; // 幹線(分支交點)距父節點的距離
   const stroke=(d,c,w)=>`<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
-  // 以開關鈕(交點)為界:父側(stub+幹線)用「父框線色/粗」;各子側(分支腿)用「子框線色/粗」
+  // 以開關鈕(交點)為分隔,全層級一致拆色:
+  //   上段(父→交點的 stub)= 父框線色;下段(交點→各子節點的幹線+圓角+腿)= 子框線色。
+  //   多個不同色子節點共用幹線時,以「由遠到近」順序繪製,讓每條分支的幹線段顯示自己的顏色。
   for(const it of list){ const n=it.node;
-    const pc = n.border || '#9fb3c8';            // 上層(父)色
-    const pw = BW[Math.min(it.depth, 6)];        // 上層(父)寬
-    // 中心(根/depth 0)的支線整條統一用中心色;深層才父/子拆色
-    const center = it.depth===0;
-    const legW = center ? pw : BW[Math.min(it.depth+1, 6)];
-    const legColor = c => center ? pc : (c.border || '#9fb3c8');
+    const pc = n.border || '#9fb3c8';            // 父色(上段 stub)
+    const pw = BW[Math.min(it.depth, 6)];        // 父寬
+    const cw = BW[Math.min(it.depth+1, 6)];      // 子寬
     const vis = visibleChildren(n);
     if(vis.length){
       if(orient==='h'){
         const px=n._x+n._w+dx, py=n._y+dy;
         const turnX = px + Math.min(TRUNK, (vis[0]._x+dx - px)*0.5);
-        paths.push(stroke(`M ${px} ${py} L ${turnX} ${py}`, pc, pw));               // 父側 stub
-        for(const c of vis){ const cx=c._x+dx, cy=c._y+dy, cc=legColor(c);
-          if(Math.abs(cy-py)<0.5){ paths.push(stroke(`M ${turnX} ${cy} L ${cx} ${cy}`, cc, legW)); }
+        paths.push(stroke(`M ${px} ${py} L ${turnX} ${py}`, pc, pw));               // 上段:父色 stub
+        const order=[...vis].sort((a,b)=>Math.abs((b._y+dy)-py)-Math.abs((a._y+dy)-py));  // 遠→近
+        for(const c of order){ const cx=c._x+dx, cy=c._y+dy, cc=c.border||'#9fb3c8';
+          if(Math.abs(cy-py)<0.5){ paths.push(stroke(`M ${turnX} ${cy} L ${cx} ${cy}`, cc, cw)); }
           else { const s=cy>py?1:-1, r=Math.min(RAD, Math.abs(cy-py), Math.max(0,cx-turnX)), conn=cy-s*r;
-            paths.push(stroke(`M ${turnX} ${py} L ${turnX} ${conn}`, pc, pw));        // 父色:幹線(到實際接點)
-            paths.push(stroke(`M ${turnX} ${conn} Q ${turnX} ${cy} ${turnX+r} ${cy} L ${cx} ${cy}`, cc, legW)); } // 子側:圓角+腿
+            paths.push(stroke(`M ${turnX} ${py} L ${turnX} ${conn}`, cc, cw));        // 下段:子色幹線
+            paths.push(stroke(`M ${turnX} ${conn} Q ${turnX} ${cy} ${turnX+r} ${cy} L ${cx} ${cy}`, cc, cw)); } // 下段:子色圓角+腿
         }
       } else {
         const px=n._x+n._w/2+dx, py=n._y+n._h/2+dy;
         const turnY = py + Math.min(TRUNK, ((vis[0]._y - vis[0]._h/2 + dy) - py)*0.5);
-        paths.push(stroke(`M ${px} ${py} L ${px} ${turnY}`, pc, pw));               // 父側 stub
-        for(const c of vis){ const cx=c._x+c._w/2+dx, cy=c._y-c._h/2+dy, cc=legColor(c);
-          if(Math.abs(cx-px)<0.5){ paths.push(stroke(`M ${cx} ${turnY} L ${cx} ${cy}`, cc, legW)); }
+        paths.push(stroke(`M ${px} ${py} L ${px} ${turnY}`, pc, pw));               // 上段:父色 stub
+        const order=[...vis].sort((a,b)=>Math.abs((b._x+b._w/2+dx)-px)-Math.abs((a._x+a._w/2+dx)-px)); // 遠→近
+        for(const c of order){ const cx=c._x+c._w/2+dx, cy=c._y-c._h/2+dy, cc=c.border||'#9fb3c8';
+          if(Math.abs(cx-px)<0.5){ paths.push(stroke(`M ${cx} ${turnY} L ${cx} ${cy}`, cc, cw)); }
           else { const s=cx>px?1:-1, r=Math.min(RAD, Math.abs(cx-px), Math.max(0,cy-turnY)), conn=cx-s*r;
-            paths.push(stroke(`M ${px} ${turnY} L ${conn} ${turnY}`, pc, pw));        // 父色:幹線(到實際接點)
-            paths.push(stroke(`M ${conn} ${turnY} Q ${cx} ${turnY} ${cx} ${turnY+r} L ${cx} ${cy}`, cc, legW)); } // 子側:圓角+腿
+            paths.push(stroke(`M ${px} ${turnY} L ${conn} ${turnY}`, cc, cw));        // 下段:子色幹線
+            paths.push(stroke(`M ${conn} ${turnY} Q ${cx} ${turnY} ${cx} ${turnY+r} L ${cx} ${cy}`, cc, cw)); } // 下段:子色圓角+腿
         }
       }
     }
-    if(n.collapsed && n.children.length){   // 收合:父側短 stub 連到開關鈕(父色)
+    if(n.collapsed && n.children.length){   // 收合:短 stub 連到開關鈕(用父色)
       if(orient==='h'){ const px=n._x+n._w+dx, py=n._y+dy; paths.push(stroke(`M ${px} ${py} L ${px+TRUNK_GAP} ${py}`, pc, pw)); }
       else            { const px=n._x+n._w/2+dx, py=n._y+n._h/2+dy; paths.push(stroke(`M ${px} ${py} L ${px} ${py+TRUNK_GAP}`, pc, pw)); }
     }
@@ -596,7 +695,6 @@ function render(){
   svg.innerHTML = paths.join('');
   canvas._dx=dx; canvas._dy=dy;
   applyTransform();
-  if(typeof syncPalette==='function') syncPalette();
   statusEl.textContent = (roots.length>1 ? `${roots.length} 個中心 · ` : '')
     + `節點 ${roots.reduce((s,r)=>s+countNodes(r),0)} 個`
     + (selection.size>1 ? ` · 已選 ${selection.size} 個`
@@ -700,7 +798,7 @@ function editSelected(){ const dom=canvas.querySelector(`.node[data-id="${select
 
 //===================== 複製 / 剪下 / 貼上 =====================
 let clipboard=null;   // 內部節點剪貼簿(node 樹陣列)
-function cloneFresh(node){ const n=makeNode(node.title); n.fill=node.fill; n.border=node.border; n.text=node.text; n.icon=node.icon; n.checked=node.checked; n.collapsed=node.collapsed;
+function cloneFresh(node){ const n=makeNode(node.title); n.fill=node.fill; n.border=node.border; n.text=node.text; n.icon=node.icon; n.checked=node.checked; n.ordered=node.ordered; n.quote=node.quote; n.collapsed=node.collapsed;
   n.children=node.children.map(cloneFresh); n.children.forEach(c=>c.parent=n); return n; }
 function copySelection(){ const tops=topLevelSelected(selection); if(!tops.length) return false; clipboard=tops.map(cloneFresh);
   statusEl.textContent=`已複製 ${tops.length} 個節點`; return true; }
@@ -784,6 +882,8 @@ function clearGuide(){ guideEl.innerHTML=''; guideEl.style.display='none'; }
 
 viewport.addEventListener('mousedown', e=>{
   if(e.button!==0) return;
+  // 點連結(無修飾鍵)→ 交給 click 開啟,不進入選取/拖曳
+  if(e.target.closest('a.mlink') && !e.shiftKey && !e.ctrlKey && !e.metaKey) return;
   const nodeDom = e.target.closest('.node');
   if(nodeDom && !editing){
     const node = findByIdAll(nodeDom.dataset.id);
@@ -921,7 +1021,15 @@ function finishMarquee(e){
   });
   render();
 }
+let _lastLinkOpen=0;
+viewport.addEventListener('click', e=>{
+  const a=e.target.closest('a.mlink'); if(!a) return;
+  e.preventDefault(); e.stopPropagation();
+  const now=Date.now(); if(now-_lastLinkOpen<400) return; _lastLinkOpen=now;  // 防雙擊重複開啟
+  const href=a.getAttribute('href'); if(href) window.open(href, '_blank', 'noopener');
+});
 viewport.addEventListener('dblclick', e=>{
+  if(e.target.closest('a.mlink')) return;   // 連結上的雙擊不進入編輯
   const nodeDom=e.target.closest('.node'); if(!nodeDom) return;
   const node=findByIdAll(nodeDom.dataset.id);
   selectOnly(node); refreshSelectionDom();   // 輕量選取,不重繪(避免元素被換掉導致無法編輯)
@@ -981,6 +1089,8 @@ window.addEventListener('keydown', e=>{
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='c'){ e.preventDefault(); copySelection(); return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='x'){ e.preventDefault(); cutSelection(); return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='v'){ e.preventDefault(); pasteAny(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='b'){ e.preventDefault(); toggleWrap('**'); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='i'){ e.preventDefault(); toggleWrap('*'); return; }
   if(!selected) return;
   if(e.key==='Tab'){ e.preventDefault(); if(e.shiftKey) addParent(); else addChild(); }
   else if(e.key==='Enter'){ e.preventDefault(); addSibling(); }
@@ -1010,30 +1120,27 @@ fileInput.onchange=e=>{ const f=e.target.files[0]; if(f) loadFile(f); fileInput.
 function loadFile(file){
   const r=new FileReader();
   r.onload=()=>{ roots=parseMarkdown(String(r.result)); selectOnly(roots[0]); history.length=0; clearSearch();
-    defaultRainbow();    // 沒顏色的檔案自動套主題;有顏色則保留原色
-    currentName=file.name.replace(/\.(md|markdown|txt)$/i,''); render(); fit(); };
+    currentName=file.name.replace(/\.(md|markdown|txt)$/i,''); render(); fit(); };   // 顏色由主題即時套用
   r.readAsText(file,'utf-8');
 }
-let currentName='心智圖';
-function exportMd(clean){
+let currentName=null;   // 載入檔案的原檔名(不含副檔名);null = 非由檔案載入
+function exportMd(){
   if(!roots.length) return;
-  const md=toMarkdown(roots, clean);
+  const md=toMarkdown(roots);   // 100% 原生 Markdown,不含顏色
   const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  const base=((roots[0].title||'').split('\n')[0].trim()||currentName||'心智圖');
-  a.download = base + (clean?'_純文字':'') + '.md';
+  // 由檔案載入 → 用原檔名;否則用根節點標題
+  const base=(currentName || (roots[0].title||'').split('\n')[0].trim() || '心智圖');
+  a.download = base + '.md';
   a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
-document.getElementById('btnExport').onclick=()=>exportMd(false);
-document.getElementById('btnExportClean').onclick=()=>exportMd(true);
+document.getElementById('btnExport').onclick=()=>exportMd();
 document.getElementById('btnNew').onclick=()=>{ snapshot(); const r0=makeNode('中心主題'); roots=[r0];
   ['分支一','分支二','分支三'].forEach(t=>{ const c=makeNode(t); c.parent=r0; r0.children.push(c); });
-  selectOnly(r0); currentName='心智圖'; clearSearch(); defaultRainbow(); render(); fit(); };
+  selectOnly(r0); currentName=null; clearSearch(); render(); fit(); };
 document.getElementById('btnChild').onclick=addChild;
 document.getElementById('btnSibling').onclick=addSibling;
 document.getElementById('btnParent').onclick=addParent;
-document.getElementById('btnDelete').onclick=deleteNode;
-document.getElementById('btnUndo').onclick=undo;
 document.getElementById('btnFit').onclick=fit;
 document.getElementById('btnOrient').onclick=()=>{
   orient = orient==='h' ? 'v' : 'h';
@@ -1041,39 +1148,44 @@ document.getElementById('btnOrient').onclick=()=>{
   render(); fit();
 };
 
-// 調色盤:原生 color picker(可挑任意顏色),依目前分頁套用到選取節點
-const palEl=document.getElementById('palette');
-let colorTarget='fill';   // fill | border | text
-function toHex6(c){ try{ const [r,g,b]=hexToRgb(c); return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join(''); }catch(e){ return colorTarget==='fill'?'#ffd1d1':'#1f2933'; } }
-function buildPalette(){
-  palEl.innerHTML='';
-  const inp=document.createElement('input'); inp.type='color'; inp.className='cpick';
-  inp.title='挑選'+(colorTarget==='fill'?'底色':colorTarget==='border'?'外框色':'文字色');
-  inp.value = toHex6((selected && selected[colorTarget]) || (colorTarget==='fill'?'#FFD1D1':'#1F2933'));
-  inp.onchange=()=>setColor(inp.value);                // 確認後才套用(一次 snapshot)
-  palEl.appendChild(inp);
-}
-// 讓選色器顏色跟著目前選取節點
-function syncPalette(){ const inp=palEl.querySelector('.cpick'); if(inp){ const cur=selected && selected[colorTarget]; if(cur) inp.value=toHex6(cur); } }
-document.querySelectorAll('#targetSel .tgt').forEach(b=>{
-  b.onclick=()=>{ colorTarget=b.dataset.t;
-    document.querySelectorAll('#targetSel .tgt').forEach(x=>x.classList.toggle('active', x===b));
-    buildPalette(); };
-});
-buildPalette();
-document.getElementById('btnClearColor').onclick=()=>setColor(null);
-function setColor(c){
-  if(!selection.size){ statusEl.textContent='請先點選節點(可多選),再選顏色'; return; }
-  snapshot();
-  for(const n of selection){ if(c) n[colorTarget]=c; else delete n[colorTarget]; }
-  render();
-}
-
 // 圖示 / 待辦
 const ICONS=['⭐','🔥','✅','❗','❓','💡','📌','🎯','👍','❤️'];
+// 文字開頭的圖示 emoji 偵測(供 nodeFrom 抽取;與匯出「emoji 放進文字」對應)
+const LEAD_ICON_RE = new RegExp('^(' + ICONS.map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')\\s*');
 const iconpalEl=document.getElementById('iconpal');
 ICONS.forEach(ic=>{ const b=document.createElement('button'); b.className='tb iconbtn'; b.textContent=ic; b.title='加上 '+ic; b.onclick=()=>setIcon(ic); iconpalEl.appendChild(b); });
 function setIcon(ic){ if(!selection.size){ statusEl.textContent='請先點選節點,再加圖示'; return; } snapshot(); for(const n of selection) n.icon=ic; render(); }
+// 行內格式:對選取節點整段標題加上/移除 **粗體** / *斜體* / ~~刪除線~~(切換)
+function toggleWrap(mk){
+  if(!selection.size){ statusEl.textContent='請先點選節點再套用樣式'; return; }
+  snapshot();
+  for(const n of selection){ const t=n.title||'';
+    if(mk==='*'){ const isBold=/^\*\*[\s\S]+\*\*$/.test(t); const m=t.match(/^\*([\s\S]+)\*$/); n.title=(m && !isBold)?m[1]:'*'+t+'*'; }
+    else { const re = mk==='**' ? /^\*\*([\s\S]+)\*\*$/ : /^~~([\s\S]+)~~$/; const m=t.match(re); n.title = m ? m[1] : mk+t+mk; }
+  }
+  render();
+}
+// 連結:把選取節點包成 [文字](網址)(已是連結則換網址)
+function addLink(){
+  if(!selection.size){ statusEl.textContent='請先點選節點再加連結'; return; }
+  const url = prompt('輸入連結網址(URL):', 'https://');
+  if(!url) return;
+  snapshot();
+  for(const n of selection){ const t=n.title||''; const m=t.match(/^\[([\s\S]+)\]\(([^)]*)\)$/);
+    n.title = m ? `[${m[1]}](${url})` : `[${t||'連結'}](${url})`; }
+  render();
+}
+// 有序清單 / 引用:切換節點類型(兩者互斥)
+function toggleOrdered(){ if(!selection.size){ statusEl.textContent='請先點選節點'; return; } snapshot();
+  const add=[...selection].some(n=>!n.ordered); for(const n of selection){ if(add){ n.ordered=true; delete n.quote; } else delete n.ordered; } render(); }
+function toggleQuote(){ if(!selection.size){ statusEl.textContent='請先點選節點'; return; } snapshot();
+  const add=[...selection].some(n=>!n.quote); for(const n of selection){ if(add){ n.quote=true; delete n.ordered; } else delete n.quote; } render(); }
+document.getElementById('btnBold').onclick=()=>toggleWrap('**');
+document.getElementById('btnItalic').onclick=()=>toggleWrap('*');
+document.getElementById('btnStrike').onclick=()=>toggleWrap('~~');
+document.getElementById('btnLink').onclick=addLink;
+document.getElementById('btnOrdered').onclick=toggleOrdered;
+document.getElementById('btnQuote').onclick=toggleQuote;
 document.getElementById('btnClearIcon').onclick=()=>{ if(!selection.size) return; snapshot(); for(const n of selection){ delete n.icon; delete n.checked; } render(); };
 document.getElementById('btnTodo').onclick=()=>{
   if(!selection.size){ statusEl.textContent='請先點選節點,再切換待辦'; return; }
@@ -1103,10 +1215,14 @@ const THEMES=[
 ];
 const RAINBOW = THEMES.findIndex(t=>t.rainbow);
 const DEFAULT_THEME = Math.max(0, THEMES.findIndex(t=>/Vivid/.test(t.name)));   // 預設主題:活力分支 Vivid
+let curTheme = DEFAULT_THEME;   // 目前套用的主題(僅網頁顯示用,不寫入檔案);render() 每次據此上色
 // 只上色,不含 snapshot/render
 function colorizeTheme(start, t){
+  // 深色介面時,把(偏黑的)中心色調亮,避免中心節點與深色背景融在一起
+  const dark = document.documentElement.classList.contains('dark');
+  const center = dark ? mixHex(t.center, '#ffffff', 0.24) : t.center;
   if(t.rainbow){
-    start.fill=t.center; start.border=t.center; start.text=t.centerText;
+    start.fill=center; start.border=center; start.text=t.centerText;
     const n = start.children.length || 1;            // 主幹數量
     start.children.forEach((c,i)=>{
       const hue = (i*360/n + (t.hueOffset||0)) % 360; // 平均分佈色相:越少越散
@@ -1116,7 +1232,7 @@ function colorizeTheme(start, t){
     });
   } else if(t.branches){
     // XMind 經典款:深色中心;每條主幹一個鮮明色(實色底),子孫用該色淺色版(淺底+同色框+深色字)
-    start.fill=t.center; start.border=t.center; start.text=t.centerText||textColor(t.center);
+    start.fill=center; start.border=center; start.text=t.centerText||textColor(center);
     const pal=t.palette, n=pal.length||1;
     start.children.forEach((c,i)=>{
       const main = pal[i % n];
@@ -1127,21 +1243,9 @@ function colorizeTheme(start, t){
     });
   }
 }
-function applyTheme(idx, scope){
-  const t=THEMES[idx]; if(!t || !roots.length) return;
-  snapshot();
-  if(scope && scope.parent) colorizeTheme(scope, t);          // 有選分支 → 只套那條分支
-  else for(const r of roots) colorizeTheme(r, t);             // 否則套用全部中心
-  render();
-}
-// 預設:當內容沒有任何顏色時,自動套用預設主題(活力分支 Vivid)
-function defaultRainbow(){ for(const r of roots){ if(!hasAnyColor(r)) colorizeTheme(r, THEMES[DEFAULT_THEME]); } }
 document.getElementById('themeSel').onchange=function(){
   const i=parseInt(this.value,10);
-  if(!isNaN(i)){
-    // 有選取且非根 → 只套用該分支;否則套用整張圖
-    applyTheme(i, (selected && selected.parent) ? selected : null);
-  }
+  if(!isNaN(i) && THEMES[i]){ curTheme=i; render(); }   // 主題僅影響網頁顯示,不寫入檔案
   this.value='';
 };
 
@@ -1183,61 +1287,115 @@ document.getElementById('searchNext').onclick=()=>gotoMatch(1);
 document.getElementById('searchClose').onclick=closeSearch;
 document.getElementById('btnSearch').onclick=()=>{ if(searchBar.classList.contains('show')) closeSearch(); else openSearch(); };
 
-//===================== 右鍵選單 =====================
+//===================== 右鍵選單(整合所有工具列功能;支援子選單)=====================
 const ctxEl=document.getElementById('ctxmenu');
-function hideCtx(){ ctxEl.style.display='none'; }
-function showCtx(x,y,items){
-  ctxEl.innerHTML='';
+let ctxSubs=[];   // 開啟中的子選單堆疊
+function closeSubsFrom(level){ while(ctxSubs.length>level){ ctxSubs.pop().remove(); } }
+function hideCtx(){ ctxEl.style.display='none'; ctxEl.innerHTML=''; closeSubsFrom(0); }
+function renderMenu(container, items, level){
   for(const it of items){
-    if(it==='—'){ const d=document.createElement('div'); d.className='mdiv'; ctxEl.appendChild(d); continue; }
+    if(it==='—'){ const d=document.createElement('div'); d.className='mdiv'; container.appendChild(d); continue; }
     const b=document.createElement('button');
-    b.innerHTML = it.key ? `${it.label}<small>${it.key}</small>` : it.label;
-    if(it.disabled) b.disabled=true;
-    else b.onclick=()=>{ hideCtx(); it.fn(); };
-    ctxEl.appendChild(b);
+    b.innerHTML = it.sub ? `${it.label}<small>▸</small>` : (it.key ? `${it.label}<small>${it.key}</small>` : it.label);
+    if(it.disabled){ b.disabled=true; container.appendChild(b); continue; }
+    if(it.sub){
+      b.addEventListener('mouseenter', ()=>{
+        closeSubsFrom(level);
+        const sub=document.createElement('div'); sub.className='ctxmenu'; sub.style.display='block';
+        renderMenu(sub, it.sub, level+1);
+        document.body.appendChild(sub); ctxSubs.push(sub);
+        const r=b.getBoundingClientRect(), sw=sub.offsetWidth, sh=sub.offsetHeight;
+        let sx=r.right-2; if(sx+sw>innerWidth-6) sx=r.left-sw+2; sx=Math.max(6,sx);
+        let sy=r.top-5; if(sy+sh>innerHeight-6) sy=Math.max(6, innerHeight-sh-6);
+        sub.style.left=sx+'px'; sub.style.top=sy+'px';
+      });
+    } else {
+      b.addEventListener('mouseenter', ()=>closeSubsFrom(level));
+      b.onclick=()=>{ hideCtx(); it.fn(); };
+    }
+    container.appendChild(b);
   }
-  ctxEl.style.display='block';
+}
+function showCtx(x,y,items){
+  closeSubsFrom(0); ctxEl.innerHTML=''; ctxEl.style.display='block';
+  renderMenu(ctxEl, items, 0);
   const mw=ctxEl.offsetWidth, mh=ctxEl.offsetHeight;
-  ctxEl.style.left=Math.min(x, window.innerWidth-mw-8)+'px';
-  ctxEl.style.top=Math.min(y, window.innerHeight-mh-8)+'px';
+  ctxEl.style.left=Math.min(x, innerWidth-mw-8)+'px';
+  ctxEl.style.top=Math.max(6, Math.min(y, innerHeight-mh-8))+'px';
 }
 viewport.addEventListener('contextmenu', e=>{
   e.preventDefault();
-  if(!roots.length) return;
-  const nodeDom=e.target.closest('.node');
+  const nodeDom = roots.length ? e.target.closest('.node') : null;
   const hasClip = !!(clipboard && clipboard.length);
+  const isDark = document.documentElement.classList.contains('dark');
+  const clickBtn = id => ()=>{ const el=document.getElementById(id); if(el) el.click(); };
+  const fileSub = [
+    {label:'✨ 新建', fn:clickBtn('btnNew')},
+    {label:'📂 開啟 .md…', fn:()=>fileInput.click()},
+    {label:'💾 匯出 .md', fn:exportMd},
+  ];
+  const viewSub = [
+    {label:'🎯 置中', fn:fit},
+    {label:'🔍 搜尋', key:'⌃F', fn:openSearch},
+    {label:'🔀 切換方向(橫/直)', fn:clickBtn('btnOrient')},
+    {label: isDark?'☀️ 淺色介面':'🌙 深色介面', fn:()=>applyDark(!isDark)},
+  ];
+  const themeSub = THEMES.map((t,i)=>({label:(i===curTheme?'● ':'　 ')+t.name, fn:()=>{ curTheme=i; render(); }}));
   let items;
   if(nodeDom){
     const node=findByIdAll(nodeDom.dataset.id);
     if(!selection.has(node)){ selectOnly(node); render(); }
     const multi = selection.size>1;
+    const fmtSub = [
+      {label:'粗體 **', key:'⌃B', fn:()=>toggleWrap('**')},
+      {label:'斜體 *', key:'⌃I', fn:()=>toggleWrap('*')},
+      {label:'刪除線 ~~', fn:()=>toggleWrap('~~')},
+      {label:'🔗 連結…', fn:addLink},
+    ];
+    const listSub = [
+      {label:'☑ 待辦', fn:clickBtn('btnTodo')},
+      {label:'1. 有序清單', fn:toggleOrdered},
+      {label:'❝ 引用', fn:toggleQuote},
+    ];
+    const iconSub = ICONS.map(ic=>({label:ic+'　加圖示', fn:()=>setIcon(ic)}));
+    iconSub.push('—', {label:'✕ 清除圖示/待辦', fn:clickBtn('btnClearIcon')});
     items=[
       {label:'＋ 子節點', key:'Tab', fn:addChild},
       {label:'＋ 同層節點', key:'Enter', fn:addSibling},
       {label:'＋ 父節點', key:'⇧Tab', fn:addParent},
       '—',
       {label:'✏️ 編輯文字', key:'F2', fn:editSelected, disabled:multi},
+      {label:'🅰 文字格式', sub:fmtSub},
+      {label:'☑ 清單', sub:listSub},
+      {label:'⭐ 圖示', sub:iconSub},
+      '—',
       {label:'📋 複製', key:'⌃C', fn:copySelection},
       {label:'✂️ 剪下', key:'⌃X', fn:cutSelection},
       {label:'📥 貼上', key:'⌃V', fn:pasteAny, disabled:!hasClip},
       {label:'🗑 刪除', key:'Del', fn:deleteNode},
-      '—',
       {label:'⬆ 提升為中心主題', fn:detachToRoot, disabled:!node.parent},
       {label: node.collapsed?'▶ 展開':'▼ 收合', fn:()=>{ node.collapsed=!node.collapsed; renderKeepingAnchor(node); }, disabled:!node.children.length},
+      '—',
+      {label:'📄 檔案', sub:fileSub},
+      {label:'👁 檢視', sub:viewSub},
+      {label:'🎨 主題', sub:themeSub},
     ];
   } else {
     items=[
       {label:'✨ 新增中心主題', fn:addRoot},
       {label:'📥 貼上', key:'⌃V', fn:pasteAny, disabled:!hasClip},
       '—',
+      {label:'📄 檔案', sub:fileSub},
+      {label:'👁 檢視', sub:viewSub},
+      {label:'🎨 主題', sub:themeSub},
+      '—',
       {label:'▼ 全部展開', fn:()=>setAllCollapsed(false)},
       {label:'▶ 全部收合', fn:()=>setAllCollapsed(true)},
-      {label:'🎯 置中', fn:fit},
     ];
   }
   showCtx(e.clientX, e.clientY, items);
 });
-window.addEventListener('mousedown', e=>{ if(!ctxEl.contains(e.target)) hideCtx(); });
+window.addEventListener('mousedown', e=>{ if(!ctxEl.contains(e.target) && !ctxSubs.some(s=>s.contains(e.target))) hideCtx(); });
 window.addEventListener('keydown', e=>{ if(e.key==='Escape') hideCtx(); });
 window.addEventListener('blur', hideCtx);
 
@@ -1271,7 +1429,7 @@ viewport.addEventListener('drop',e=>{ e.preventDefault(); dropEl.classList.remov
   const f=e.dataTransfer.files[0]; if(f) loadFile(f); });
 
 //===================== 浮動工具視窗(拖曳 / 收合 / 記憶位置) =====================
-const FW_KEY='mm-fwpos3';   // 版號:更新預設排版,讓舊的(會重疊的)記憶位置失效一次
+const FW_KEY='mm-fwpos5';   // 版號:工具視窗組成再變更(新增「清單」窗、文字窗加 S/🔗),重設一次排版
 let fwPos={}; try{ fwPos=JSON.parse(localStorage.getItem(FW_KEY))||{}; }catch(e){ fwPos={}; }
 function saveFwPos(){ try{ localStorage.setItem(FW_KEY, JSON.stringify(fwPos)); }catch(e){} }
 let fwZ=100;
@@ -1320,6 +1478,15 @@ function resetFloatWins(){
   placeFloatWins();
 }
 document.getElementById('btnResetUI').onclick=resetFloatWins;
+// 淺色 / 深色 介面切換(預設跟隨系統,手動切換會記住)
+function applyDark(on){ document.documentElement.classList.toggle('dark', on);
+  const b=document.getElementById('btnDark'); if(b){ b.textContent = on ? '☀️ 淺色' : '🌙 深色'; b.title = on ? '切換為淺色介面' : '切換為深色介面'; }
+  try{ localStorage.setItem('mm-dark', on?'1':'0'); }catch(e){}
+  if(typeof render==='function' && roots.length) render();   // 重新上色(中心色深淺隨介面)
+}
+(function(){ let pref=null; try{ pref=localStorage.getItem('mm-dark'); }catch(e){}
+  applyDark(pref==='1'); })();   // 預設淺色;使用者手動切換才記住深色
+document.getElementById('btnDark').onclick=()=>applyDark(!document.documentElement.classList.contains('dark'));
 placeFloatWins();
 window.addEventListener('resize', ()=>{ // 視窗縮小時把跑到畫面外的視窗拉回可見範圍
   for(const w of document.querySelectorAll('.floatwin')){
@@ -1333,6 +1500,10 @@ window.addEventListener('resize', ()=>{ // 視窗縮小時把跑到畫面外的�
 roots = parseMarkdown(`# 心智圖編輯器
 ## 一分鐘上手
 - 雙擊任一節點即可編輯文字;按 Enter 完成、Esc 取消
+- 文字支援 Markdown:**粗體**、*斜體*(工具列 B / I 或 Ctrl+B/I)
+- 任務清單:輸入開頭 [ ] 或 [x] 自動變待辦;Emoji 短碼如 :fire: :bulb: 自動轉 🔥💡
+- 連結:[文字](網址) 或直接貼網址會變底線連結,點一下開新分頁;~~刪除線~~ 也支援
+- 清單:- * + 都算子節點;1. 2. 為有序(顯示序號);> 為引用(斜體備註)
 - 選一個節點後按 Tab 新增「子節點」、按 Enter 新增「同層節點」
 - 想刪除就選起來按 Del;做錯了按 Ctrl+Z 復原
 - 空白處按住拖曳 = 平移畫面;滾輪 = 放大縮小
@@ -1350,19 +1521,17 @@ roots = parseMarkdown(`# 心智圖編輯器
 - Ctrl+點選:逐一加選 / 取消
 - Shift+拖曳空白處:框選一整區
 ## 外觀與配色
-- 工具列「主題」可一鍵套用整張圖配色(預設:活力分支 Vivid)
-- 先選某個分支再選主題 = 只換那一條分支的顏色
-- 「配色」視窗:分別設定底色 / 外框 / 文字(可多選節點一起改)
-- 「標記」視窗:加待辦核取方塊 ☑、或加上 ⭐🔥✅ 等圖示
+- 工具列「主題」可一鍵切換整張圖配色(預設:活力分支 Vivid)
+- 顏色只是網頁視覺辨識、不會寫進 .md;載入時依主題自動上色
+- 「標記」視窗:B/I 粗體斜體、待辦核取方塊 ☑、或加上 ⭐🔥✅ 等圖示
 ## 版面與檢視
 - 「檢視 → 🔀 方向」:切換 橫式(往右)/ 直式(往下)
 - 「🎯 置中」:把整張圖縮放置中;右下角 ＋／－ 也可縮放
 - Ctrl+F 搜尋節點,Enter / Shift+Enter 跳上一個 / 下一個
 - 工具視窗可拖標題列移動、點「–」收合,位置會自動記住
-## 檔案 / 匯出
+## 檔案 / 匯出(皆為原生 Markdown)
 - 「📂 開啟」或直接把 .md 檔拖進畫面即可匯入
-- 「💾 匯出」存成 Markdown(含配色標記)
-- 「📄 純文字」匯出乾淨 .md(不含顏色/圖示標記)
+- 「💾 匯出」存成 100% 原生 Markdown(標題/清單/任務/粗斜體/emoji;不含顏色)
 - 「✨ 新建」開一張空白心智圖
 ## 小提醒
 - 本工具不會自動存檔,完成後請記得「匯出」保存
@@ -1375,8 +1544,7 @@ roots = parseMarkdown(`# 心智圖編輯器
 - 各自獨立、互不相連
 - 在節點上右鍵可「⬆ 提升為中心主題」`);
 selectOnly(roots[0]);
-defaultRainbow();   // 預設套用預設主題(活力分支 Vivid)
-render(); fit();
+render(); fit();   // 顏色由 render() 依目前主題即時套用(預設 Vivid)
 </script>
 </body>
 </html>
