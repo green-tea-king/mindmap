@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  心智圖編輯器 (Mind Map Editor) — 單檔 HTML
+  版次 Version : 7.5
+  最後更新 Updated: 2026-06-08
+  ------------------------------------------------------------
+  ⚠ 維護規範(任何人或 AI 接手修改本檔,都必須遵守):
+     每次修改完成後,務必同步更新「版次」與「最後更新日期」,共三處:
+       (1) 本註解上方的「版次 Version」與「最後更新 Updated」
+       (2) 下方 <script> 內的常數  APP_VERSION 與 APP_DATE
+       (3) 在下方「修改紀錄 Changelog」最上方新增一行
+            格式:日期(YYYY-MM-DD) / 版次 / 變更摘要
+     版次原則:小改 +0.1,大改 +1.0。畫面左上角會顯示目前版次與日期。
+  ------------------------------------------------------------
+  修改紀錄 Changelog(最新在最上):
+     2026-06-08  v7.5  修正匯出圖片/PDF 的節點文字偏上問題:改用置中基線並在節點內垂直置中,文字不再貼著上緣或像被裁切。
+     2026-06-08  v7.4  匯出 PDF 改為「整張縮放置入單張 A4」(直/橫自動、置中留邊),不再產生超大頁面;JPG 仍輸出原尺寸高解析圖。
+     2026-06-08  v7.3  新增「匯出 JPG」與「匯出 PDF」(純前端 Canvas 繪製整張圖、內嵌 PDF,無外部相依);右鍵 → 檔案 內。
+     2026-06-08  v7.2  原始碼面板/匯出改為精簡排版:標題與其內容之間不再插入空行,只在中心主題之間留白,提升文字易讀性。
+     2026-06-08  v7.1  重寫啟動頁說明/示範:完整介紹介面、編輯、文字格式、清單圖示、原始碼面板、配色、版面、快速鍵與檔案匯出。
+     2026-06-08  v7.0  新增右側「原始 Markdown」面板:即時檢視/編輯原始碼,點節點或文字列雙向對應選取;另加 Ctrl+Y 重做、Ctrl+A 全選。
+     2026-06-04  v6.1  所有工具列整合進右鍵選單(含子選單:文字格式/清單/圖示/檔案/檢視/主題);隱藏浮動工具列、僅留左上 brand。
+                        實作上保留隱藏的工具列元素,選單呼叫既有函式/觸發隱藏按鈕,邏輯不變。
+     2026-06-04  v6.0  「編輯」窗移除 刪除/復原 按鈕(Del 與 Ctrl+Z、右鍵選單仍可用)。
+     2026-06-04  v5.9  介面預設改為淺色(不再跟隨系統;手動切換深色仍會記住)。
+     2026-06-04  v5.8  名稱改為「MD心智圖」;深色介面時把主題中心色自動調亮(避免中心節點與深背景融在一起),切換深淺會即時重新上色。
+     2026-06-04  v5.7  名稱改為「MK心智圖」(分頁標題與左上 brand 兩處)。
+     2026-06-04  v5.6  新增 淺色/深色 介面切換(檢視窗「🌙 深色」鈕;預設跟隨系統、選擇會記住);節點顏色仍由配色主題決定。
+     2026-06-04  v5.5  所有支援功能上工具列:文字窗加 S 刪除線 / 🔗 連結;新增「清單」窗(待辦/有序 1./引用 ❝);
+                        視窗組成變更故重設記憶位置(key→mm-fwpos5)。
+     2026-06-04  v5.4  新增 有序清單 1./1)(顯示序號、匯出回 N.)、* + 清單符號(視為子節點)、引用塊 >(斜體備註)。
+     2026-06-04  v5.3  新增原生連結 [文字](網址) 與裸網址自動連結(底線樣式、點擊開新分頁、防雙開、避開選取/拖曳/編輯)、刪除線 ~~。
+     2026-06-04  v5.2  工具列重新分組:「標記」拆成「文字」(B/I/待辦)與「圖示」(emoji+清除);主題維持獨立;
+                        視窗組成變更故重設記憶位置(key→mm-fwpos4)。
+     2026-06-04  v5.1  修正:Changelog 文字裡的註解結尾符號讓本檔頭註解提前關閉、整段顯示成文字;已改寫該文字。
+     2026-06-04  v5.0  改為 100% 原生 Markdown:匯入/匯出皆不含顏色(移除 f/b/t 與 mm、c 兩種顏色註解);
+                        顏色改由主題在 render() 即時套用(純視覺、不存檔,新節點自動上色);
+                        移除手動「配色」視窗與「純文字」匯出按鈕;主題選單僅切換顯示。
+     2026-06-04  v4.8  圖示原生化:匯出改為把 emoji 放進文字(- ⭐ 文字),不再用 ic= 註解;載入自動抽回徽章;
+                        向下相容舊 ic=。至此 mm 註解只剩「顏色」無原生對應。
+     2026-06-04  v4.7  新增 GFM 任務清單([ ]/[x],匯出改原生語法、向下相容舊 ck)、Emoji 短碼(:fire: 等)、
+                        粗體/斜體工具列 B/I 與 Ctrl+B/I、***粗斜*** 行內樣式。
+     2026-06-04  v4.6  節點文字支援行內 Markdown:**粗體**、*斜體*(含 __/_);顯示轉 HTML,編輯/匯出仍原始語法(先跳脫 HTML)。
+     2026-06-04  v4.5  修正節點重疊:父節點比子節點群寬/高時會溢出 slot 壓到鄰居;改為子群置中於 slot。
+     2026-06-04  v4.4  匯出檔名:由檔案載入時沿用原檔名(非載入則用根標題);新建會清掉記住的檔名。
+     2026-06-04  v4.3  連線改為「全層級一致」以開關鈕為界拆色:上段 stub=父色、下段(幹線+腿)=子色;
+                        多子不同色時用遠→近順序繪製,各分支幹線段顯示自己的顏色(取消中心特例)。
+     2026-06-04  v4.2  深層節點的支線「幹線段」也改用子節點色(原為父色),只剩中心維持中心色;父stub仍父色。
+     2026-06-04  v4.1  分頁標題改為「Markdown心智圖」並加上 🧠 favicon;檔名改為 index.html(GitHub Pages)。
+     2026-06-04  v4.0  待辦按鈕只留 ☑ emoji(去文字);末端 ✕ 改為一次清除「圖示 + 待辦」。
+     2026-06-04  v3.9  配色色球改為原生 color picker(可挑任意顏色,選色器同步目前選取節點顏色)。
+     2026-06-04  v3.8  「編輯」視窗按鈕重新排序:父節點 → 同層 → 子節點(刪除/復原維持在後)。
+     2026-06-04  v3.7  「檔案」視窗按鈕重新排序:新建 → 開啟 → 匯出 → 純文字。
+     2026-06-04  v3.6  中心(根)的支線整條統一用中心色(不再黑幹線配彩色腿);深層維持父/子拆色。
+     2026-06-04  v3.5  新增「↺ 工具列歸位」按鈕(檢視視窗):還原所有工具視窗位置與收合狀態。
+     2026-06-04  v3.4  修正幹線超出接點「噴出」:幹線改為逐子畫到實際接點(cy∓r),不再多伸一段。
+     2026-06-04  v3.3  連線以開關鈕為界拆色:父側 stub+幹線用父框線色/粗,各子側分支腿用子框線色/粗。
+     2026-06-04  v3.2  節點拖到空白處(未落在任何節點上)即脫離成獨立中心主題。
+     2026-06-04  v3.1  新增「＋ 父節點」(⇧Tab):在選取節點上方插入一層;工具列與右鍵選單皆有。
+     2026-06-04  v3.0  支援多個中心/根節點(同畫布多張獨立心智圖):資料模型 root→roots、
+                        多 H1 解析/匯出、逐根版面跨軸堆疊、新增/提升中心主題、拖曳可跨中心搬移。
+     2026-06-04  v2.5  修正左側工具視窗初始重疊:重設記憶位置(key→mm-fwpos3)+ 拖曳時一次記住全部視窗位置。
+     2026-06-04  v2.4  開關鈕配色繼承上層框線:展開=白底+同色框與符號;收合=同色底+深色框+白色符號。
+     2026-06-04  v2.3  點展開/收合鈕後以該節點為錨點重繪,版面不再跳動或縮放(scale 不變)。
+     2026-06-04  v2.2  收合節點時補畫一小段支線連到開關鈕,+ 鈕不再孤立。
+     2026-06-04  v2.1  展開/收合鈕改用連線相同公式定位到畫布座標,精準置中於分支交點(原受節點邊框/內距影響略偏)。
+     2026-06-04  v2.0  展開/收合鈕移到「分支交點」(線接上幹線處),不再壓在節點邊緣文字上。
+     2026-06-04  v1.9  預設範例改為更完整的教學(上手/編輯/配色/版面/檔案/提醒)。
+     2026-06-04  v1.8  Vivid 調色盤改交錯排序,避免相鄰主幹色相過近(如橙/黃)撞色。
+     2026-06-04  v1.7  支線改用「上層(父)節點」的外框顏色與外框粗細(原為子節點)。
+     2026-06-04  v1.6  外框粗細改為依層級遞減(lv0 3px→lv6 1.4px);字級、支線本即遞減,三者一致。
+     2026-06-04  v1.5  修正多子節點連線在父節點下方打結爆開:改為匯流排式單邊圓角(僅子側轉角)。
+     2026-06-04  v1.4  預設主題改為「活力分支 Vivid」(無顏色內容自動套用)。
+     2026-06-04  v1.3  加大分支線轉角圓角(RAD 10→18,TRUNK 26→28)。
+     2026-06-04  v1.2  連線改為直角圓角(elbow)幾何風;全部主題改為 XMind 經典款
+                        (深色中心+鮮明主幹色+淺色子節點,淺底/深字自動推算)。
+     2026-06-04  v1.1  新增「活力分支 Vivid」配色主題(深色中心+鮮明主幹色+淺色子節點)。
+     2026-06-04  v1.0  加入版次/日期顯示與維護規範;先前已將工具列改為浮動視窗、
+                        滾輪縮放、橫式/直式版面切換、移除小地圖與檔案庫。
+  ============================================================
+-->
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MD心智圖</title>
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#232830">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+
+<style>
+  :root{
+    --bg:#f4f6f9; --panel:#ffffff; --line:#c2ccd8; --txt:#1f2933;
+    --accent:#2f6fed; --accent2:#e8f0ff; --danger:#e5484d;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:"Microsoft JhengHei","PingFang TC",system-ui,sans-serif;color:var(--txt);}
+  #app{display:flex;flex-direction:column;height:100%;background:var(--bg);}
+  /* 浮動工具視窗 */
+  .floatwin{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 6px 22px rgba(20,40,80,.18);z-index:100;display:flex;flex-direction:column;overflow:hidden;}
+  .fwhead{display:flex;align-items:center;gap:6px;padding:6px 10px;background:#eef2f7;border-bottom:1px solid var(--line);
+    cursor:move;user-select:none;font-size:11px;font-weight:700;color:#5a6470;letter-spacing:.6px;white-space:nowrap;}
+  .fwhead .fwcollapse{margin-left:auto;border:none;background:transparent;cursor:pointer;font-size:13px;color:#5a6470;
+    width:20px;height:20px;border-radius:5px;line-height:1;padding:0;}
+  .fwhead .fwcollapse:hover{background:#fff;}
+  .fwbrand{cursor:move;font-size:14px;font-weight:800;color:var(--accent);letter-spacing:0;border-bottom:none;}
+  .fwver{padding:3px 11px 7px;font-size:11px;color:#9aa5b1;white-space:nowrap;user-select:none;}
+  .fwbody{display:flex;flex-wrap:nowrap;align-items:center;gap:3px;padding:7px;width:max-content;}
+  .floatwin.collapsed{box-shadow:0 3px 12px rgba(20,40,80,.16);}
+  .floatwin.collapsed .fwhead{border-bottom:none;}
+  .floatwin.collapsed .fwbody{display:none;}
+  button.tb{border:none;background:transparent;border-radius:8px;padding:6px 10px;font-size:13px;
+    cursor:pointer;color:var(--txt);transition:.12s;white-space:nowrap;line-height:1.15;}
+  .fwbody button.tb:hover{background:var(--accent2);box-shadow:none;}
+  button.tb.primary{background:var(--accent);color:#fff;}
+  button.tb.primary:hover{filter:brightness(1.08);}
+  button.tb small{opacity:.5;font-size:11px;margin-left:3px;}
+  #iconpal{display:inline-flex;flex-wrap:nowrap;align-items:center;}
+  #themeSel{border:1px solid #dfe5ee;background:#fff;border-radius:9px;padding:7px 9px;font-size:13px;font-family:inherit;cursor:pointer;color:var(--txt);}
+  #themeSel:hover{border-color:var(--accent);}
+  .hint{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);font-size:11.5px;color:#9aa5b1;
+    white-space:nowrap;background:rgba(255,255,255,.72);padding:3px 11px;border-radius:8px;z-index:40;pointer-events:none;}
+  /* viewport */
+  #viewport{position:relative;flex:1;overflow:hidden;cursor:grab;background-color:#f7f9fc;
+    background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='40'%20height='40'%3E%3Cg%20fill='none'%20stroke='%23c2ccd8'%20stroke-width='1'%20stroke-dasharray='4,4'%3E%3Cpath%20d='M0%200H40'/%3E%3Cpath%20d='M0%200V40'/%3E%3C/g%3E%3C/svg%3E");}
+  #viewport.panning{cursor:grabbing;}
+  #canvas{position:absolute;left:0;top:0;transform-origin:0 0;}
+  svg#edges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
+  .node{position:absolute;width:max-content;max-width:340px;padding:7px 12px;border-radius:9px;background:#fff;
+    border:1.5px solid var(--line);font-size:14px;line-height:1.4;cursor:pointer;user-select:none;
+    writing-mode:horizontal-tb;box-shadow:0 1px 4px rgba(20,40,80,.08);
+    white-space:pre-wrap;overflow-wrap:break-word;word-break:normal;transition:box-shadow .12s,border-color .12s;}
+  .node:hover{border-color:var(--accent);}
+  .node .ckbox{cursor:pointer;margin-right:5px;font-size:1.05em;line-height:1;}
+  .node .nicon{margin-right:4px;}
+  .node .norder{margin-right:5px;font-weight:700;opacity:.75;}
+  .node.quote{font-style:italic;}
+  .node.quote .ntext{opacity:.85;}
+  .node a.mlink{color:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer;}
+  .node a.mlink:hover{text-decoration-thickness:2px;}
+  .node.done{opacity:.6;}
+  .iconbtn{font-size:15px;padding:4px 6px;line-height:1;}
+  .node.sel{border-color:var(--accent) !important;box-shadow:0 0 0 2px #fff,0 0 0 5px var(--accent) !important;z-index:4;}
+  .node.editing{cursor:text;outline:none;}
+  .node.droptarget{border-color:var(--danger);box-shadow:0 0 0 3px rgba(229,72,77,.25);}
+  .node.dragging{opacity:.35;}
+  .node.match{box-shadow:0 0 0 3px #ffd54f;}
+  .node.match-current{box-shadow:0 0 0 4px #fb8c00 !important;border-color:#fb8c00 !important;}
+  #searchBar{position:absolute;top:12px;right:14px;display:none;align-items:center;gap:6px;background:#fff;
+    border:1px solid var(--line);border-radius:10px;padding:6px 8px;box-shadow:0 4px 16px rgba(0,0,0,.14);z-index:60;}
+  #searchBar.show{display:flex;}
+  #marquee{position:absolute;border:1.5px solid var(--accent);background:rgba(47,111,237,.12);z-index:55;pointer-events:none;display:none;border-radius:3px;}
+  #guide{position:absolute;left:0;top:0;display:none;z-index:57;pointer-events:none;overflow:visible;}
+  #searchInput{border:none;outline:none;font-size:14px;width:180px;padding:3px 4px;font-family:inherit;}
+  #searchCount{font-size:12px;color:#7b8794;min-width:40px;text-align:center;}
+  #searchBar button{width:26px;height:26px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;font-size:13px;color:var(--txt);}
+  #searchBar button:hover{background:var(--accent2);}
+  .ghost{position:fixed;pointer-events:none;z-index:9999;background:var(--accent);color:#fff;
+    padding:5px 11px;border-radius:7px;font-size:13px;max-width:240px;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;box-shadow:0 6px 18px rgba(0,0,0,.28);opacity:.96;}
+  .dragghost-layer{position:fixed;inset:0;pointer-events:none;z-index:9998;}
+  .dragghost-layer .ghostnode{opacity:.88;box-shadow:0 8px 20px rgba(0,0,0,.28);}
+  .node.d0{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700;}
+  .node.d1{background:#fff;border-color:#2f6fed;font-weight:600;}
+  .node.d2{background:#f3f8ff;}
+  /* 依層級遞減:字級 + 外框粗細(支線粗細在 JS 的 LW 陣列) */
+  .node.lv0{font-size:20px;border-width:3px;}
+  .node.lv1{font-size:17px;border-width:2.6px;}
+  .node.lv2{font-size:15px;border-width:2.2px;}
+  .node.lv3{font-size:14px;border-width:1.9px;}
+  .node.lv4{font-size:13px;border-width:1.7px;}
+  .node.lv5{font-size:12.5px;border-width:1.5px;}
+  .node.lv6{font-size:12px;border-width:1.4px;}
+  /* collapse toggle */
+  .toggle{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;border:1.5px solid var(--accent);
+    color:var(--accent);font-size:12px;line-height:15px;text-align:center;cursor:pointer;right:-9px;top:50%;
+    transform:translateY(-50%);z-index:3;font-weight:700;}
+  .toggle:hover{filter:brightness(1.08);box-shadow:0 0 0 3px rgba(20,40,80,.12);}
+  #empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:#9aa5b1;gap:14px;pointer-events:none;}
+  #empty b{font-size:20px;color:#7b8794;}
+  #drop{position:absolute;inset:12px;border:3px dashed var(--accent);border-radius:16px;background:rgba(47,111,237,.06);
+    display:none;align-items:center;justify-content:center;font-size:22px;color:var(--accent);z-index:50;pointer-events:none;}
+  #drop.show{display:flex;}
+  #status{position:absolute;left:12px;bottom:10px;font-size:12px;color:#7b8794;background:rgba(255,255,255,.85);
+    padding:4px 9px;border-radius:6px;border:1px solid var(--line);}
+  .zoombar{position:absolute;right:14px;bottom:14px;display:flex;gap:6px;background:var(--panel);
+    border:1px solid var(--line);border-radius:9px;padding:5px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+  .zoombar button{width:30px;height:30px;border:none;background:transparent;font-size:17px;cursor:pointer;border-radius:6px;color:var(--txt);}
+  .zoombar button:hover{background:var(--accent2);}
+  /* 所有功能整合到右鍵選單:隱藏功能工具列,僅保留左上 brand(版次) */
+  .floatwin:not(#fwBrand){ display:none !important; }
+  .ctxmenu{position:fixed;display:none;background:#fff;border:1px solid var(--line);border-radius:10px;
+    box-shadow:0 10px 30px rgba(20,40,80,.20);padding:5px;z-index:200;min-width:188px;max-height:92vh;overflow:auto;font-size:13px;}
+  .ctxmenu button{display:flex;width:100%;align-items:center;gap:8px;border:none;background:transparent;
+    padding:7px 11px;border-radius:7px;cursor:pointer;text-align:left;color:var(--txt);white-space:nowrap;font-family:inherit;}
+  .ctxmenu button:hover{background:var(--accent2);}
+  .ctxmenu button small{margin-left:auto;opacity:.55;font-size:11px;padding-left:14px;}
+  .ctxmenu button:disabled{opacity:.45;cursor:default;}
+  .ctxmenu button:disabled:hover{background:transparent;}
+  .ctxmenu .mdiv{height:1px;background:var(--line);margin:4px 4px;}
+  .ctxmenu .ctxhdr{font-size:11px;opacity:.6;padding:4px 11px 2px;cursor:default;}
+  /* ===== 深色介面(切換 App 外觀;節點顏色仍由配色主題決定)===== */
+  html.dark{ --bg:#14171c; --panel:#232830; --line:#39414d; --txt:#e6e9ee; --accent2:#2a3340; color-scheme:dark; }
+  html.dark #viewport{ background-color:#161a20;
+    background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='40'%20height='40'%3E%3Cg%20fill='none'%20stroke='%23323a45'%20stroke-width='1'%20stroke-dasharray='4,4'%3E%3Cpath%20d='M0%200H40'/%3E%3Cpath%20d='M0%200V40'/%3E%3C/g%3E%3C/svg%3E"); }
+  html.dark .fwhead{ background:#2b313b; color:#aeb6c2; }
+  html.dark .fwcollapse{ color:#aeb6c2; }
+  html.dark .fwcollapse:hover{ background:rgba(255,255,255,.12); }
+  html.dark .fwbrand{ color:#6ea0ff; }
+  html.dark #themeSel{ background:#2b313b; border-color:var(--line); color:var(--txt); }
+  html.dark #searchBar{ background:var(--panel); }
+  html.dark #searchInput{ color:var(--txt); background:transparent; }
+  html.dark #searchBar button{ background:#2b313b; color:var(--txt); }
+  html.dark .ctxmenu{ background:var(--panel); }
+  html.dark #status{ background:rgba(20,23,28,.85); color:#aeb6c2; }
+  html.dark .hint{ background:rgba(20,23,28,.6); color:#8b94a3; }
+  html.dark #empty{ color:#8b94a3; }
+  html.dark #empty b{ color:#aeb6c2; }
+  /* ===== 右側原始 Markdown 面板(雙向同步) ===== */
+  :root{ --mdw:360px; }
+  html.md-open #app{ margin-right:var(--mdw); }
+  #mdPanel{ position:fixed; top:0; right:0; bottom:0; width:var(--mdw); z-index:150; background:var(--panel);
+    border-left:1px solid var(--line); display:none; flex-direction:column; box-shadow:-4px 0 18px rgba(20,40,80,.10); }
+  html.md-open #mdPanel{ display:flex; }
+  #mdResize{ position:absolute; left:-3px; top:0; bottom:0; width:7px; cursor:col-resize; z-index:3; }
+  #mdResize:hover{ background:rgba(47,111,237,.30); }
+  #mdHead{ display:flex; align-items:center; gap:8px; padding:9px 12px; font-size:12px; font-weight:700;
+    letter-spacing:.4px; color:#5a6470; background:#eef2f7; border-bottom:1px solid var(--line); user-select:none; }
+  #mdHead .mdsp{ margin-left:auto; }
+  #mdHead button{ border:none; background:transparent; cursor:pointer; font-size:14px; color:#5a6470;
+    width:24px; height:24px; border-radius:6px; line-height:1; padding:0; }
+  #mdHead button:hover{ background:#fff; }
+  #mdWrap{ position:relative; flex:1; overflow:hidden; }
+  #mdHi{ position:absolute; left:0; right:0; top:0; height:20px; display:none; pointer-events:none; z-index:1;
+    background:rgba(47,111,237,.16); border-top:1px solid rgba(47,111,237,.38); border-bottom:1px solid rgba(47,111,237,.38); }
+  #mdText{ position:absolute; inset:0; width:100%; height:100%; resize:none; border:none; outline:none; z-index:2;
+    background:transparent; color:var(--txt); font:13px/20px ui-monospace,"Cascadia Code",Menlo,Consolas,"Courier New",monospace;
+    padding:10px 12px; white-space:pre; overflow:auto; tab-size:2; }
+  #mdInfo{ padding:6px 12px; font-size:11px; color:#9aa5b1; border-top:1px solid var(--line);
+    user-select:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #mdTab{ position:fixed; right:0; top:50%; transform:translateY(-50%); z-index:149; background:var(--accent);
+    color:#fff; border:none; cursor:pointer; writing-mode:vertical-rl; padding:14px 6px; border-radius:9px 0 0 9px;
+    font-size:12px; font-weight:700; letter-spacing:2px; box-shadow:-2px 2px 10px rgba(20,40,80,.18); }
+  #mdTab:hover{ filter:brightness(1.07); }
+  html.md-open #mdTab{ display:none; }
+  html.dark #mdHead{ background:#2b313b; color:#aeb6c2; }
+  html.dark #mdHead button{ color:#aeb6c2; }
+  html.dark #mdHead button:hover{ background:rgba(255,255,255,.12); }
+  html.dark #mdHi{ background:rgba(110,160,255,.18); border-color:rgba(110,160,255,.42); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="viewport">
+    <div id="canvas"><svg id="edges"></svg></div>
+    <div id="empty"><b>還沒有內容</b><div>在空白處按右鍵 →「檔案 → 開啟 / 新建」,或把 .md 檔拖進來</div></div>
+    <div id="drop">放開以匯入 Markdown</div>
+    <div id="status"></div>
+    <div id="searchBar">
+      <input id="searchInput" placeholder="搜尋節點…" autocomplete="off">
+      <span id="searchCount">0/0</span>
+      <button id="searchPrev" title="上一個 (Shift+Enter)">↑</button>
+      <button id="searchNext" title="下一個 (Enter)">↓</button>
+      <button id="searchClose" title="關閉 (Esc)">✕</button>
+    </div>
+    <div id="marquee"></div>
+    <svg id="guide"></svg>
+    <div class="zoombar">
+      <button id="zOut">－</button><button id="zIn">＋</button><button id="zReset">⤢</button>
+    </div>
+  </div>
+</div>
+<div id="ctxmenu" class="ctxmenu"></div>
+
+<!-- 浮動工具視窗(可拖曳標題列移動,點 — 收合) -->
+<div class="floatwin" id="fwBrand"><div class="fwhead fwbrand">🧠 MD心智圖</div><div class="fwver" id="appVer"></div></div>
+
+<div class="floatwin" id="fwFile">
+  <div class="fwhead">檔案<button class="fwcollapse" title="收合">–</button></div>
+  <div class="fwbody">
+    <button class="tb" id="btnNew" title="新建心智圖">✨ 新建</button>
+    <button class="tb primary" id="btnOpen" title="開啟 Markdown (.md)">📂 開啟</button>
+    <button class="tb" id="btnExport" title="匯出 Markdown(純原生,不含顏色)">💾 匯出</button>
+  </div>
+</div>
+
+<div class="floatwin" id="fwEdit">
+  <div class="fwhead">編輯<button class="fwcollapse" title="收合">–</button></div>
+  <div class="fwbody">
+    <button class="tb" id="btnParent" title="新增父節點(在選取節點上方插入一層)">＋ 父節點 <small>⇧Tab</small></button>
+    <button class="tb" id="btnSibling" title="新增同層節點">＋ 同層 <small>Enter</small></button>
+    <button class="tb" id="btnChild" title="新增子節點">＋ 子節點 <small>Tab</small></button>
+  </div>
+</div>
+
+<div class="floatwin" id="fwView">
+  <div class="fwhead">檢視<button class="fwcollapse" title="收合">–</button></div>
+  <div class="fwbody">
+    <button class="tb" id="btnFit" title="置中縮放">🎯 置中</button>
+    <button class="tb" id="btnSearch" title="搜尋節點">🔍 搜尋 <small>⌃F</small></button>
+    <button class="tb" id="btnOrient" title="切換 橫式(往右)/ 直式(往下)版面">🔀 方向</button>
+    <button class="tb" id="btnDark" title="切換 淺色 / 深色 介面">🌙 深色</button>
+    <button class="tb" id="btnResetUI" title="把工具視窗位置與收合狀態還原成預設">↺ 工具列歸位</button>
+  </div>
+</div>
+
+<div class="floatwin" id="fwText">
+  <div class="fwhead">文字<button class="fwcollapse" title="收合">–</button></div>
+  <div class="fwbody">
+    <button class="tb" id="btnBold" title="粗體 **（Ctrl+B）" style="font-weight:800;">B</button>
+    <button class="tb" id="btnItalic" title="斜體 *（Ctrl+I）" style="font-style:italic;font-family:Georgia,'Times New Roman',serif;">I</button>
+    <button class="tb" id="btnStrike" title="刪除線 ~~" style="text-decoration:line-through;">S</button>
+    <button class="tb" id="btnLink" title="加連結 [文字](網址)">🔗</button>
+  </div>
+</div>
+
+<div class="floatwin" id="fwList">
+  <div class="fwhead">清單<button class="fwcollapse" title="收合">–</button></div>
+  <div class="fwbody">
+    <button class="tb iconbtn" id="btnTodo" title="切換待辦核取方塊 [ ]/[x]">☑</button>
+    <button class="tb" id="btnOrdered" title="切換有序清單(顯示序號 1. 2. 3.)" style="font-weight:700;">1.</button>
+    <button class="tb" id="btnQuote" title="切換引用塊(備註樣式 >)">❝</button>
+  </div>
+</div>
+
+<div class="floatwin" id="fwIcon">
+  <div class="fwhead">圖示<button class="fwcollapse" title="收合">–</button></div>
+  <div class="fwbody">
+    <span id="iconpal"></span>
+    <button class="tb" id="btnClearIcon" title="清除圖示與待辦">✕</button>
+  </div>
+</div>
+
+<div class="floatwin" id="fwTheme">
+  <div class="fwhead">主題<button class="fwcollapse" title="收合">–</button></div>
+  <div class="fwbody">
+    <select id="themeSel" title="一鍵套用整張圖的配色主題(依層級深淺)">
+      <option value="">🎨 主題…</option>
+      <option value="0">活力分支 Vivid</option>
+      <option value="1">暖大地 Mocha</option>
+      <option value="2">暮青 Teal</option>
+      <option value="3">蜜桃絨 Peach</option>
+      <option value="4">數位薰衣草</option>
+      <option value="5">生機綠</option>
+      <option value="6">彩虹分支 Rainbow</option>
+    </select>
+  </div>
+</div>
+
+<span class="hint">🖱 右鍵叫出選單(全部功能在這)· 雙擊編輯 · 拖節點換掛載/順序 · 滾輪縮放 · 拖背景平移 · Shift+滾輪水平捲動</span>
+<input type="file" id="file" accept=".md,.markdown,.txt,text/markdown,text/plain" style="display:none">
+<button id="mdTab" title="開啟原始 Markdown 面板(雙向同步)">📝 原始碼</button>
+<div id="mdPanel">
+  <div id="mdResize"></div>
+  <div id="mdHead">📝 原始 Markdown<span class="mdsp"></span><button id="mdClose" title="關閉面板">✕</button></div>
+  <div id="mdWrap"><div id="mdHi"></div><textarea id="mdText" spellcheck="false" autocomplete="off" wrap="off"></textarea></div>
+  <div id="mdInfo">雙向同步 · 點節點或文字列會互相對應;直接編輯文字即時更新心智圖</div>
+</div>
+<script>
+"use strict";
+//===================== 版次資訊(修改本檔請同步更新,並更新檔頭註解與 Changelog)=====================
+const APP_VERSION = '7.5';        // 版次:小改 +0.1,大改 +1.0
+const APP_DATE    = '2026-06-08'; // 最後更新日期 YYYY-MM-DD
+{ const v=document.getElementById('appVer'); if(v) v.textContent='v'+APP_VERSION+' · '+APP_DATE; }
+
+//===================== 資料模型 =====================
+let uidc = 0;
+const uid = () => 'n' + (Date.now().toString(36)) + (uidc++).toString(36);
+function makeNode(title){ return {id:uid(), title:title||'', children:[], collapsed:false, parent:null}; }
+// 由文字建立節點。顏色一律不從檔案讀(改由主題即時上色);仍去除舊版註解並相容讀舊 ic/ck。
+function nodeFrom(text){
+  text = String(text);
+  let icon, checked;
+  let m = text.match(/\s*<!--mm:([^>]*)-->\s*$/);
+  if(m){
+    text = text.slice(0, m.index);
+    m[1].split(';').forEach(kv=>{ const i=kv.indexOf('='); const k=kv.slice(0,i), v=kv.slice(i+1);
+      if(k==='ic') icon=v; else if(k==='ck') checked=(v==='1'); });   // f/b/t(顏色)忽略
+  } else {
+    const o = text.match(/\s*<!--c:[#\w]+-->\s*$/);
+    if(o){ text = text.slice(0, o.index); }   // 舊顏色標記:去除但忽略
+  }
+  let title = text.replace(/\s+$/,'');
+  // GFM 任務清單:開頭 [ ] / [x] → 待辦勾選(原生語法,優先於舊的 ck 標記)
+  const tm = title.match(/^\[([ xX])\]\s+(.*)$/);
+  if(tm){ checked = (tm[1].toLowerCase()==='x'); title = tm[2]; }
+  // 圖示原生化:文字開頭若為內建圖示 emoji → 抽成徽章(有舊 ic= 則以 ic= 為準)
+  if(icon===undefined){ const im = title.match(LEAD_ICON_RE); if(im){ icon = im[1]; title = title.slice(im[0].length); } }
+  const n = makeNode(title);
+  if(icon) n.icon=icon; if(checked!==undefined) n.checked=checked;
+  return n;
+}
+function setParents(node, parent){ node.parent = parent||null; for(const c of node.children) setParents(c, node); }
+function cloneTree(node){ const n={id:node.id,title:node.title,fill:node.fill,border:node.border,text:node.text,icon:node.icon,checked:node.checked,ordered:node.ordered,quote:node.quote,collapsed:node.collapsed,children:node.children.map(cloneTree),parent:null}; return n; }
+// 顏色工具
+function hexToRgb(c){ c=String(c).replace('#',''); if(c.length===3) c=c.split('').map(x=>x+x).join(''); const n=parseInt(c,16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+function luminance(c){ try{ const [r,g,b]=hexToRgb(c); return (0.299*r+0.587*g+0.114*b)/255; }catch(e){ return 1; } }
+function textColor(c){ return luminance(c)>0.62 ? '#1f2933' : '#ffffff'; }
+function darken(c,f){ try{ let [r,g,b]=hexToRgb(c); r=Math.round(r*(1-f)); g=Math.round(g*(1-f)); b=Math.round(b*(1-f)); return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join(''); }catch(e){ return '#9aa5b1'; } }
+function mixHex(a,b,t){ try{ const [r1,g1,b1]=hexToRgb(a), [r2,g2,b2]=hexToRgb(b); const m=(x,y)=>Math.round(x+(y-x)*t);
+  return '#'+[m(r1,r2),m(g1,g2),m(b1,b2)].map(x=>x.toString(16).padStart(2,'0')).join(''); }catch(e){ return a; } }
+function hslToHex(h,s,l){ s/=100; l/=100; const k=n=>(n+h/30)%12; const a=s*Math.min(l,1-l);
+  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+  const hx=x=>Math.round(255*x).toString(16).padStart(2,'0'); return '#'+hx(f(0))+hx(f(8))+hx(f(4)); }
+function hasAnyColor(n){ return !!(n.fill||n.border||n.text) || n.children.some(hasAnyColor); }
+// Emoji 短碼對照(常用 + 內建圖示);可自行擴充
+const EMOJI={star:'⭐',fire:'🔥',white_check_mark:'✅',check:'✅',heavy_check_mark:'✔️',x:'❌',
+  exclamation:'❗',bangbang:'‼️',warning:'⚠️',question:'❓',grey_question:'❔',bulb:'💡',pushpin:'📌',
+  round_pushpin:'📍',dart:'🎯','+1':'👍',thumbsup:'👍','-1':'👎',thumbsdown:'👎',heart:'❤️',
+  broken_heart:'💔',red_circle:'🔴',green_circle:'🟢',large_blue_circle:'🔵',yellow_circle:'🟡',
+  white_circle:'⚪',black_circle:'⚫',bell:'🔔',rocket:'🚀',tada:'🎉',sparkles:'✨',zap:'⚡',boom:'💥',
+  sos:'🆘',ok:'🆗',new:'🆕',up:'🔼',down:'🔽',memo:'📝',pencil:'✏️',books:'📚',book:'📖',email:'📧',
+  phone:'📞',bug:'🐛',wrench:'🔧',hammer:'🔨',gear:'⚙️',lock:'🔒',unlock:'🔓',key:'🔑',mag:'🔍',
+  link:'🔗',flag:'🚩',triangular_flag:'🚩',trophy:'🏆',medal:'🏅',crown:'👑',thinking:'🤔',eyes:'👀',
+  muscle:'💪',clap:'👏',pray:'🙏',point_right:'👉',point_left:'👈',arrow_right:'➡️',arrow_left:'⬅️',
+  arrow_up:'⬆️',arrow_down:'⬇️',sunny:'☀️',cloud:'☁️',snowflake:'❄️',coffee:'☕',apple:'🍎',
+  gift:'🎁',moneybag:'💰',dollar:'💵',hourglass:'⏳',alarm_clock:'⏰',stopwatch:'⏱️',calendar:'📅',
+  date:'📆',smile:'😄',laughing:'😆',cry:'😢',angry:'😠',heart_eyes:'😍',sweat_smile:'😅',
+  fearful:'😨',sleeping:'😴',sunglasses:'😎',clipboard:'📋',chart:'📊',chart_up:'📈',chart_down:'📉',
+  hammer_and_wrench:'🛠️',construction:'🚧',no_entry:'⛔',recycle:'♻️',hot_pepper:'🌶️',seedling:'🌱'};
+// 行內 Markdown:粗體/斜體(** *、__ _、***)+ Emoji 短碼;先跳脫 HTML 再轉換(顯示用,編輯/匯出仍原始語法)
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function inlineMd(t){
+  let s = escHtml(t);
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');     // ***粗斜***
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');                  // **粗體**
+  s = s.replace(/(^|[^\w])___(.+?)___(?=[^\w]|$)/g, '$1<strong><em>$2</em></strong>'); // ___粗斜___
+  s = s.replace(/(^|[^\w])__(.+?)__(?=[^\w]|$)/g, '$1<strong>$2</strong>'); // __粗體__
+  s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');                              // *斜體*
+  s = s.replace(/(^|[^\w])_(.+?)_(?=[^\w]|$)/g, '$1<em>$2</em>');          // _斜體_
+  s = s.replace(/~~(.+?)~~/g, '<del>$1</del>');                            // ~~刪除線~~(GFM)
+  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,                              // [文字](網址) 連結
+        '<a href="$2" class="mlink" title="點擊開啟連結" rel="noopener">$1</a>');
+  s = s.replace(/(?<![">=])\bhttps?:\/\/[^\s<)]+/g,                        // 裸網址自動連結
+        m=>`<a href="${m}" class="mlink" title="點擊開啟連結" rel="noopener">${m}</a>`);
+  s = s.replace(/:([a-z0-9_+\-]+):/gi, (m,k)=> EMOJI[k.toLowerCase()] || m); // :fire: 等短碼
+  return s;
+}
+function isDescendant(node, maybeAncestor){ // true if node is descendant of maybeAncestor
+  let p = node.parent; while(p){ if(p===maybeAncestor) return true; p=p.parent; } return false;
+}
+
+let roots = [];               // 多個中心/根節點(同一畫布上各自獨立的心智圖)
+let selected = null;          // 主節點(供編輯/新增/方向鍵)
+let selection = new Set();    // 多選集合
+let scale = 1, panX = 80, panY = 0;
+const history = [];
+const redoStack = [];
+let searchMatches=[], searchMatchIds=new Set(), searchIdx=-1, currentMatchId=null;
+const STACK_GAP = 56;         // 多個根之間的間距
+// 多根輔助
+function findByIdAll(id){ for(const r of roots){ const n=findById(r,id); if(n) return n; } return null; }
+function rootOf(node){ let p=node; while(p && p.parent) p=p.parent; return p; }
+
+//===================== Markdown 解析 =====================
+// 回傳「根節點陣列」:每個 H1(# )開啟一個新的中心/根
+function parseMarkdown(text){
+  const lines = text.replace(/\r/g,'').split('\n');
+  const rootsOut = [];
+  let cur = null, headingDepth = 0, last = null, stack = [];
+  function ensureRoot(){ if(!cur){ cur = makeNode('心智圖'); rootsOut.push(cur); stack=[{depth:0,node:cur}]; last=cur; headingDepth=0; } }
+  function attach(node, depth){
+    while(stack.length && stack[stack.length-1].depth >= depth) stack.pop();
+    const parent = stack.length ? stack[stack.length-1].node : cur;
+    if(parent) parent.children.push(node);
+    stack.push({depth, node}); last = node;
+  }
+  for(let li=0; li<lines.length; li++){
+    const line=lines[li];
+    if(line.trim()==='') continue;
+    const h = line.match(/^(#{1,6})\s+(.*)$/);
+    if(h){
+      const depth = h[1].length - 1;
+      if(depth===0){ cur = nodeFrom(h[2].trim()); cur._srcLine=li; rootsOut.push(cur); stack=[{depth:0,node:cur}]; last=cur; headingDepth=0; }
+      else { ensureRoot(); if(cur._srcLine==null) cur._srcLine=li; headingDepth = depth; const nd=nodeFrom(h[2].trim()); nd._srcLine=li; attach(nd, depth); }
+      continue;
+    }
+    // 有序清單 1. / 1)
+    const ol = line.match(/^(\s*)\d+[.)]\s+(.*)$/);
+    if(ol){ ensureRoot(); if(cur._srcLine==null) cur._srcLine=li; const indent=Math.floor(ol[1].replace(/\t/g,'  ').length/2);
+      const nd=nodeFrom(ol[2]); nd.ordered=true; nd._srcLine=li; attach(nd, headingDepth + 1 + indent); continue; }
+    // 無序清單 - * +
+    const b = line.match(/^(\s*)[-*+]\s+(.*)$/);
+    if(b){ ensureRoot(); if(cur._srcLine==null) cur._srcLine=li; const indent=Math.floor(b[1].replace(/\t/g,'  ').length/2);
+      const nd=nodeFrom(b[2]); nd._srcLine=li; attach(nd, headingDepth + 1 + indent); continue; }
+    // 引用塊 >
+    const q = line.match(/^(\s*)>\s+(.*)$/);
+    if(q){ ensureRoot(); if(cur._srcLine==null) cur._srcLine=li; const indent=Math.floor(q[1].replace(/\t/g,'  ').length/2);
+      const nd=nodeFrom(q[2]); nd.quote=true; nd._srcLine=li; attach(nd, headingDepth + 1 + indent); continue; }
+    // 續行:併入上一個節點標題
+    if(last) last.title += '\n' + line.trim();
+  }
+  if(!rootsOut.length) rootsOut.push(makeNode('心智圖'));
+  rootsOut.forEach(r=>setParents(r, null));
+  return rootsOut;
+}
+
+//===================== Markdown 輸出(100% 原生:標題/清單/任務清單/粗斜體/emoji;不含顏色)=====================
+function toMarkdown(rootsArr){
+  return buildMdRows(rootsArr).map(r=>r.t).join('\n') + '\n';
+}
+
+//===================== 版面配置(橫式樹 / 直式樹) =====================
+const HGAP = 54, VGAP = 14;       // 橫式:欄距 / 同層垂直間距
+const ROWGAP = 58, COLGAP = 26;   // 直式:列距 / 同層水平間距
+const TRUNK_GAP = 28;             // 幹線(分支交點)距父節點的距離;連線與開關鈕共用
+let orient = 'h';                 // 'h' 主節點在左、分支往右;'v' 主節點在上、分支往下
+try{ const o=localStorage.getItem('mm-orient'); if(o==='v'||o==='h') orient=o; }catch(e){}
+
+function visibleChildren(n){ return n.collapsed ? [] : n.children; }
+function measure(node){
+  const list = [];
+  (function walk(n, depth){ list.push({node:n,depth}); for(const c of visibleChildren(n)) walk(c, depth+1); })(node,0);
+  return list;
+}
+// 座標慣例(兩種方向皆然,讓定位/置中程式碼不變):_x = 左緣,_y = 垂直中心
+function layout(node, mainPos){
+  if(orient==='h'){
+    function subSize(n){ const ch=visibleChildren(n);
+      if(!ch.length){ n._sub=n._h; return n._sub; }
+      let s=0; for(const c of ch) s+=subSize(c)+VGAP; s-=VGAP;
+      n._sub=Math.max(s,n._h); return n._sub; }
+    function place(n, depth, top){ n._x=mainPos[depth];          // 同層靠左齊頭
+      const ch=visibleChildren(n);
+      if(!ch.length){ n._y=top+n._sub/2; return; }
+      let span=0; for(const c of ch) span+=c._sub+VGAP; span-=VGAP;   // 子節點群總高
+      let t=top+Math.max(0,(n._sub-span)/2);                          // node 較高時:子群置中於 slot
+      let first=null, last=null;
+      for(const c of ch){ place(c,depth+1,t); first=first||c; last=c; t+=c._sub+VGAP; }
+      n._y=(first._y+last._y)/2; }
+    subSize(node); place(node,0,0);
+  } else {
+    function subSize(n){ const ch=visibleChildren(n);
+      if(!ch.length){ n._sub=n._w; return n._sub; }
+      let s=0; for(const c of ch) s+=subSize(c)+COLGAP; s-=COLGAP;
+      n._sub=Math.max(s,n._w); return n._sub; }
+    function place(n, depth, left){ n._y=mainPos[depth]+n._h/2;  // 同層靠上齊頭(列線對齊上緣)
+      const ch=visibleChildren(n);
+      if(!ch.length){ n._x=left+(n._sub-n._w)/2; return; }
+      let span=0; for(const c of ch) span+=c._sub+COLGAP; span-=COLGAP;  // 子節點群總寬
+      let l=left+Math.max(0,(n._sub-span)/2);                            // node 較寬時:子群置中於 slot
+      let first=null, last=null;
+      for(const c of ch){ place(c,depth+1,l); first=first||c; last=c; l+=c._sub+COLGAP; }
+      const cf=first._x+first._w/2, cl=last._x+last._w/2;
+      n._x=(cf+cl)/2 - n._w/2; }
+    subSize(node); place(node,0,0);
+  }
+}
+
+//===================== 繪製 =====================
+const viewport = document.getElementById('viewport');
+const canvas = document.getElementById('canvas');
+const svg = document.getElementById('edges');
+const statusEl = document.getElementById('status');
+const emptyEl = document.getElementById('empty');
+
+function render(){
+  emptyEl.style.display = roots.length ? 'none' : 'flex';
+  // remove old node divs + toggles (keep svg)
+  [...canvas.querySelectorAll('.node, .toggle')].forEach(e=>e.remove());
+  svg.innerHTML='';
+  if(!roots.length){ applyTransform(); statusEl.textContent=''; refreshMdPanel(mdTextDriven); return; }
+  canvas.classList.toggle('vert', orient==='v');
+  // 顏色純由主題即時套用(視覺辨識用,不存檔);新節點也會自動上色
+  for(const r of roots) colorizeTheme(r, THEMES[curTheme] || THEMES[DEFAULT_THEME]);
+
+  // 收集每個根的可見節點;list = 全部節點(供建立 DOM / 連線 / 開關鈕)
+  const groups = roots.map(r=>({root:r, list:measure(r)}));
+  const list = [];
+  for(const g of groups) for(const it of g.list) list.push(it);
+  // 1) create + measure
+  for(const it of list){
+    const d = document.createElement('div');
+    d.className = 'node lv' + Math.min(it.depth,6) + (it.depth<=2 ? (' d'+it.depth) : '');
+    d.dataset.id = it.node.id;
+    const n = it.node;
+    if(n.quote) d.classList.add('quote');   // 引用塊樣式
+    // 有序清單序號(顯示在同層中的位置)
+    if(n.ordered){ const i=(n.parent?n.parent.children.indexOf(n):0)+1;
+      const od=document.createElement('span'); od.className='norder'; od.textContent=i+'.'; d.appendChild(od); }
+    // checkbox(待辦)
+    if(n.checked!==undefined){
+      const cb=document.createElement('span'); cb.className='ckbox'+(n.checked?' on':''); cb.textContent=n.checked?'☑':'☐';
+      cb.addEventListener('mousedown',ev=>ev.stopPropagation());
+      cb.addEventListener('click',ev=>{ ev.stopPropagation(); snapshot(); n.checked=!n.checked; render(); });
+      d.appendChild(cb);
+    }
+    // icon(圖示)
+    if(n.icon){ const ic=document.createElement('span'); ic.className='nicon'; ic.textContent=n.icon; d.appendChild(ic); }
+    // title
+    const tx=document.createElement('span'); tx.className='ntext'; tx.innerHTML = n.title ? inlineMd(n.title) : ' ';
+    if(n.checked) tx.style.textDecoration='line-through';
+    d.appendChild(tx);
+    if(n.checked) d.classList.add('done');
+    if(n.fill) d.style.background = n.fill;
+    if(n.text) d.style.color = n.text;            else if(n.fill) d.style.color = textColor(n.fill);
+    if(n.border) d.style.borderColor = n.border;  else if(n.fill) d.style.borderColor = darken(n.fill, 0.18);
+    if(isSel(it.node)) d.classList.add('sel');
+    if(searchMatchIds.has(it.node.id)) d.classList.add('match');
+    if(it.node.id===currentMatchId) d.classList.add('match-current');
+    canvas.appendChild(d);
+    it.dom = d;
+    it.node._w = d.offsetWidth; it.node._h = d.offsetHeight;
+  }
+  // 2) 逐一根版面配置(各自算欄/列位置),再於跨軸方向堆疊,使多個中心不重疊
+  const MGAP = orient==='h' ? HGAP : ROWGAP;
+  let cross = 0;
+  for(const g of groups){
+    const glist = g.list;
+    const maxMain = {}; let maxDepth = 0;
+    for(const it of glist){ const sz = orient==='h' ? it.node._w : it.node._h;
+      maxMain[it.depth] = Math.max(maxMain[it.depth]||0, sz); if(it.depth>maxDepth) maxDepth=it.depth; }
+    const mainPos = {0:0};
+    for(let d=1; d<=maxDepth; d++) mainPos[d] = mainPos[d-1] + (maxMain[d-1]||0) + MGAP;
+    layout(g.root, mainPos);
+    if(orient==='h'){ for(const it of glist) it.node._y += cross; cross += g.root._sub + STACK_GAP; }
+    else            { for(const it of glist) it.node._x += cross; cross += g.root._sub + STACK_GAP; }
+  }
+  // 3) shift to positive space
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  for(const it of list){ const n=it.node;
+    minX=Math.min(minX,n._x); minY=Math.min(minY,n._y-n._h/2);
+    maxX=Math.max(maxX,n._x+n._w); maxY=Math.max(maxY,n._y+n._h/2);
+  }
+  const pad=40, dx=pad-minX, dy=pad-minY;
+  // 4) position + toggles
+  for(const it of list){ const n=it.node;
+    it.dom.style.left=(n._x+dx)+'px';
+    it.dom.style.top=(n._y-n._h/2+dy)+'px';
+    if(n.children.length){
+      const tg=document.createElement('div'); tg.className='toggle';
+      tg.textContent = n.collapsed ? '+' : '–';
+      tg.title = n.collapsed ? '展開' : '收合';
+      // 顏色繼承上層(本節點)的框線色:展開=白底+同色框與符號;收合=同色底+深色框+白色符號
+      const lc = n.border || '#9fb3c8';
+      if(n.collapsed){ tg.style.background=lc; tg.style.borderColor=darken(lc,0.28); tg.style.color='#fff'; }
+      else           { tg.style.background='#fff'; tg.style.borderColor=lc; tg.style.color=lc; }
+      // 精準置中於「分支交點」(用與連線相同的 turnX/turnY 公式;直接定位到畫布座標)
+      const vis = visibleChildren(n);
+      let jx, jy;
+      if(orient==='h'){
+        const pxr = n._x + n._w;
+        const off = vis.length ? Math.min(TRUNK_GAP, (vis[0]._x - pxr)*0.5) : TRUNK_GAP;
+        jx = pxr + off + dx; jy = n._y + dy;
+      } else {
+        const pyb = n._y + n._h/2;
+        const off = vis.length ? Math.min(TRUNK_GAP, ((vis[0]._y - vis[0]._h/2) - pyb)*0.5) : TRUNK_GAP;
+        jx = n._x + n._w/2 + dx; jy = pyb + off + dy;
+      }
+      tg.style.left=(jx-9)+'px'; tg.style.top=(jy-9)+'px';
+      tg.style.right='auto'; tg.style.bottom='auto'; tg.style.transform='none';
+      tg.addEventListener('mousedown',e=>{e.stopPropagation();});
+      tg.addEventListener('click',e=>{e.stopPropagation(); n.collapsed=!n.collapsed; renderKeepingAnchor(n);});
+      canvas.appendChild(tg);
+    }
+  }
+  // 5) edges
+  const w=maxX-minX+pad*2, h=maxY-minY+pad*2;
+  svg.setAttribute('width',w); svg.setAttribute('height',h);
+  const paths=[];
+  const BW=[3, 2.6, 2.2, 1.9, 1.7, 1.5, 1.4];   // 外框粗細階梯(與 CSS .lv 一致)
+  const RAD = 18;          // 轉角圓角半徑
+  const TRUNK = TRUNK_GAP; // 幹線(分支交點)距父節點的距離
+  const stroke=(d,c,w)=>`<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  // 以開關鈕(交點)為分隔,全層級一致拆色:
+  //   上段(父→交點的 stub)= 父框線色;下段(交點→各子節點的幹線+圓角+腿)= 子框線色。
+  //   多個不同色子節點共用幹線時,以「由遠到近」順序繪製,讓每條分支的幹線段顯示自己的顏色。
+  for(const it of list){ const n=it.node;
+    const pc = n.border || '#9fb3c8';            // 父色(上段 stub)
+    const pw = BW[Math.min(it.depth, 6)];        // 父寬
+    const cw = BW[Math.min(it.depth+1, 6)];      // 子寬
+    const vis = visibleChildren(n);
+    if(vis.length){
+      if(orient==='h'){
+        const px=n._x+n._w+dx, py=n._y+dy;
+        const turnX = px + Math.min(TRUNK, (vis[0]._x+dx - px)*0.5);
+        paths.push(stroke(`M ${px} ${py} L ${turnX} ${py}`, pc, pw));               // 上段:父色 stub
+        const order=[...vis].sort((a,b)=>Math.abs((b._y+dy)-py)-Math.abs((a._y+dy)-py));  // 遠→近
+        for(const c of order){ const cx=c._x+dx, cy=c._y+dy, cc=c.border||'#9fb3c8';
+          if(Math.abs(cy-py)<0.5){ paths.push(stroke(`M ${turnX} ${cy} L ${cx} ${cy}`, cc, cw)); }
+          else { const s=cy>py?1:-1, r=Math.min(RAD, Math.abs(cy-py), Math.max(0,cx-turnX)), conn=cy-s*r;
+            paths.push(stroke(`M ${turnX} ${py} L ${turnX} ${conn}`, cc, cw));        // 下段:子色幹線
+            paths.push(stroke(`M ${turnX} ${conn} Q ${turnX} ${cy} ${turnX+r} ${cy} L ${cx} ${cy}`, cc, cw)); } // 下段:子色圓角+腿
+        }
+      } else {
+        const px=n._x+n._w/2+dx, py=n._y+n._h/2+dy;
+        const turnY = py + Math.min(TRUNK, ((vis[0]._y - vis[0]._h/2 + dy) - py)*0.5);
+        paths.push(stroke(`M ${px} ${py} L ${px} ${turnY}`, pc, pw));               // 上段:父色 stub
+        const order=[...vis].sort((a,b)=>Math.abs((b._x+b._w/2+dx)-px)-Math.abs((a._x+a._w/2+dx)-px)); // 遠→近
+        for(const c of order){ const cx=c._x+c._w/2+dx, cy=c._y-c._h/2+dy, cc=c.border||'#9fb3c8';
+          if(Math.abs(cx-px)<0.5){ paths.push(stroke(`M ${cx} ${turnY} L ${cx} ${cy}`, cc, cw)); }
+          else { const s=cx>px?1:-1, r=Math.min(RAD, Math.abs(cx-px), Math.max(0,cy-turnY)), conn=cx-s*r;
+            paths.push(stroke(`M ${px} ${turnY} L ${conn} ${turnY}`, cc, cw));        // 下段:子色幹線
+            paths.push(stroke(`M ${conn} ${turnY} Q ${cx} ${turnY} ${cx} ${turnY+r} L ${cx} ${cy}`, cc, cw)); } // 下段:子色圓角+腿
+        }
+      }
+    }
+    if(n.collapsed && n.children.length){   // 收合:短 stub 連到開關鈕(用父色)
+      if(orient==='h'){ const px=n._x+n._w+dx, py=n._y+dy; paths.push(stroke(`M ${px} ${py} L ${px+TRUNK_GAP} ${py}`, pc, pw)); }
+      else            { const px=n._x+n._w/2+dx, py=n._y+n._h/2+dy; paths.push(stroke(`M ${px} ${py} L ${px} ${py+TRUNK_GAP}`, pc, pw)); }
+    }
+  }
+  svg.innerHTML = paths.join('');
+  canvas._dx=dx; canvas._dy=dy;
+  applyTransform();
+  statusEl.textContent = (roots.length>1 ? `${roots.length} 個中心 · ` : '')
+    + `節點 ${roots.reduce((s,r)=>s+countNodes(r),0)} 個`
+    + (selection.size>1 ? ` · 已選 ${selection.size} 個`
+       : (selected? ` · 已選:「${(selected.title||'').split('\n')[0].slice(0,18)}」`:''));
+  refreshMdPanel(mdTextDriven);
+}
+function countNodes(n){ let c=1; for(const ch of n.children) c+=countNodes(ch); return c; }
+// 重繪並讓 anchor 節點維持在原本的螢幕位置(scale 不變、版面不跳動)
+function renderKeepingAnchor(anchor){
+  if(!anchor){ render(); return; }
+  const sx = panX + (anchor._x + (canvas._dx||0))*scale;   // 重繪前的螢幕座標
+  const sy = panY + (anchor._y + (canvas._dy||0))*scale;
+  render();                                                 // 版面重算(scale 不動)
+  panX = sx - (anchor._x + (canvas._dx||0))*scale;          // 補回位移,讓 anchor 不動
+  panY = sy - (anchor._y + (canvas._dy||0))*scale;
+  applyTransform();
+}
+function applyTransform(){
+  canvas.style.transform=`translate(${panX}px,${panY}px) scale(${scale})`;
+  const g=40*scale;   // 網格跟著平移與縮放
+  viewport.style.backgroundSize = g+'px '+g+'px';
+  viewport.style.backgroundPosition = panX+'px '+panY+'px';
+}
+//===================== 右側原始 Markdown 面板(雙向同步) =====================
+const MD_LH=20, MD_PAD=10;
+const mdTextEl=document.getElementById('mdText');
+const mdHiEl=document.getElementById('mdHi');
+const mdInfoEl=document.getElementById('mdInfo');
+let mdPanelOpen=false;
+let mdTextDriven=false;
+let mdLineToId=[];
+let mdIdToLine={};
+let mdActiveBlock=null;
+let mdInputTimer=null;
+function buildMdRows(rootsArr){
+  if(!Array.isArray(rootsArr)) rootsArr=[rootsArr];
+  const out=[]; const HEADING_LIMIT=2;
+  const box=node=>node.checked===undefined?'':(node.checked?'[x] ':'[ ] ');
+  const push=(t,id)=>out.push({t,id:id||null});
+  function emit(node, prefix, cont){
+    const ls=(node.title||'').split('\n'); const ic=node.icon?node.icon+' ':'';
+    push(prefix+box(node)+ic+ls[0], node.id);
+    for(let i=1;i<ls.length;i++) push(cont+ls[i], node.id);
+  }
+  function bullet(node, indent){
+    const ind='  '.repeat(indent); let marker;
+    if(node.quote) marker='> ';
+    else if(node.ordered){ const i=(node.parent?node.parent.children.indexOf(node):0)+1; marker=i+'. '; }
+    else marker='- ';
+    emit(node, ind+marker, ind+'  ');
+    for(const c of node.children) bullet(c, indent+1);
+  }
+  function rec(node, depth){
+    if(depth<=HEADING_LIMIT && node.children.length && !node.ordered && !node.quote){
+      emit(node, '#'.repeat(depth+2)+' ', '');
+      for(const c of node.children) rec(c, depth+1);
+    } else bullet(node, 0);
+  }
+  for(const rootN of rootsArr){
+    emit(rootN, '# ', ''); push('', null);
+    for(const c of rootN.children) rec(c, 0);
+    push('', null);
+  }
+  const rows=[];
+  for(const r of out){ if(r.t==='' && rows.length && rows[rows.length-1].t==='') continue; rows.push(r); }
+  while(rows.length && rows[rows.length-1].t==='') rows.pop();
+  return rows;
+}
+function lineAt(pos){ return mdTextEl.value.slice(0,pos).split('\n').length-1; }
+function rebuildLineMapFromRows(rows){
+  mdLineToId=rows.map(r=>r.id); mdIdToLine={};
+  rows.forEach((r,i)=>{ if(r.id!=null && mdIdToLine[r.id]==null) mdIdToLine[r.id]=i; });
+}
+function rebuildLineMapFromRoots(){
+  const n=mdTextEl.value.split('\n').length;
+  mdLineToId=new Array(n).fill(null); mdIdToLine={};
+  (function walk(arr){ for(const nd of arr){ if(nd._srcLine!=null && nd._srcLine<n){
+    if(mdLineToId[nd._srcLine]==null) mdLineToId[nd._srcLine]=nd.id;
+    if(mdIdToLine[nd.id]==null) mdIdToLine[nd.id]=nd._srcLine; } walk(nd.children); } })(roots);
+}
+function refreshMdPanel(fromText){
+  if(!mdPanelOpen) return;
+  if(fromText){ rebuildLineMapFromRoots(); }
+  else {
+    const rows=buildMdRows(roots); rebuildLineMapFromRows(rows);
+    const text=rows.map(r=>r.t).join('\n')+'\n';
+    if(mdTextEl.value!==text) mdTextEl.value=text;
+  }
+  if(document.activeElement!==mdTextEl){ if(selected) highlightMdNode(selected); else setActiveMdLine(null); }
+  if(mdInfoEl){ const c=roots.reduce((s,r)=>s+countNodes(r),0); mdInfoEl.textContent='雙向同步 · '+mdLineToId.length+' 行 · '+c+' 節點'; }
+}
+function setActiveMdLine(line){
+  if(line==null || line<0){ mdHiEl.style.display='none'; mdActiveBlock=null; return; }
+  let a=line,b=line; const id=mdLineToId[line];
+  if(id!=null){ while(a-1>=0 && mdLineToId[a-1]===id) a--; while(b+1<mdLineToId.length && mdLineToId[b+1]===id) b++; }
+  mdActiveBlock={a,b}; mdHiEl.style.display='block';
+  mdHiEl.style.top=(MD_PAD + a*MD_LH - mdTextEl.scrollTop)+'px';
+  mdHiEl.style.height=((b-a+1)*MD_LH)+'px';
+}
+function scrollMdLineIntoView(line){
+  const top=line*MD_LH, vh=mdTextEl.clientHeight, st=mdTextEl.scrollTop;
+  if(top < st) mdTextEl.scrollTop=top;
+  else if(top+MD_LH > st+vh-MD_PAD*2) mdTextEl.scrollTop=top+MD_LH-vh+MD_PAD*2;
+}
+function highlightMdNode(node){
+  if(!mdPanelOpen||!node) return;
+  const ln=mdIdToLine[node.id];
+  if(ln==null){ setActiveMdLine(null); return; }
+  setActiveMdLine(ln); scrollMdLineIntoView(ln);
+}
+function syncMapToMdCursor(doCenter){
+  if(!mdPanelOpen) return;
+  const line=lineAt(mdTextEl.selectionStart); setActiveMdLine(line);
+  const id=mdLineToId[line]; if(id==null) return;
+  const n=findByIdAll(id); if(!n) return;
+  if(n!==selected || selection.size!==1){ selectOnly(n); refreshSelectionDom(); }
+  if(doCenter) centerOn(n);
+}
+function commitMdText(){
+  const text=mdTextEl.value; const curLine=lineAt(mdTextEl.selectionStart);
+  snapshot(); roots=parseMarkdown(text);
+  mdTextDriven=true; render(); mdTextDriven=false;
+  const id=mdLineToId[curLine]; const n=id?findByIdAll(id):null;
+  if(n){ selectOnly(n); refreshSelectionDom(); }
+  setActiveMdLine(curLine);
+}
+function toggleMdPanel(on){
+  mdPanelOpen = (on===undefined) ? !mdPanelOpen : !!on;
+  document.documentElement.classList.toggle('md-open', mdPanelOpen);
+  try{ localStorage.setItem('mm-mdopen', mdPanelOpen?'1':'0'); }catch(e){}
+  if(mdPanelOpen) render(); else setActiveMdLine(null);
+}
+mdTextEl.addEventListener('input', ()=>{ setActiveMdLine(lineAt(mdTextEl.selectionStart));
+  clearTimeout(mdInputTimer); mdInputTimer=setTimeout(commitMdText, 350); });
+mdTextEl.addEventListener('click', ()=>syncMapToMdCursor(true));
+mdTextEl.addEventListener('keyup', e=>{ if(e.key.indexOf('Arrow')===0||e.key==='Home'||e.key==='End'||e.key==='PageUp'||e.key==='PageDown') syncMapToMdCursor(false); });
+mdTextEl.addEventListener('scroll', ()=>{ if(mdActiveBlock) mdHiEl.style.top=(MD_PAD + mdActiveBlock.a*MD_LH - mdTextEl.scrollTop)+'px'; });
+mdTextEl.addEventListener('keydown', e=>{ e.stopPropagation();
+  if(e.key==='Tab'){ e.preventDefault(); const sp=mdTextEl.selectionStart, en=mdTextEl.selectionEnd, v=mdTextEl.value;
+    mdTextEl.value=v.slice(0,sp)+'  '+v.slice(en); mdTextEl.selectionStart=mdTextEl.selectionEnd=sp+2;
+    clearTimeout(mdInputTimer); mdInputTimer=setTimeout(commitMdText, 350); } });
+document.getElementById('mdClose').onclick=()=>toggleMdPanel(false);
+document.getElementById('mdTab').onclick=()=>toggleMdPanel(true);
+(function(){ let d=null;
+  document.getElementById('mdResize').addEventListener('mousedown', e=>{
+    d={x:e.clientX, w:parseInt(getComputedStyle(document.documentElement).getPropertyValue('--mdw'))||360};
+    document.body.style.userSelect='none'; e.preventDefault(); });
+  window.addEventListener('mousemove', e=>{ if(!d) return; let w=d.w-(e.clientX-d.x);
+    w=Math.max(240,Math.min(680,w)); document.documentElement.style.setProperty('--mdw', w+'px');
+    if(mdActiveBlock) mdHiEl.style.top=(MD_PAD + mdActiveBlock.a*MD_LH - mdTextEl.scrollTop)+'px'; });
+  window.addEventListener('mouseup', ()=>{ if(d){ try{ localStorage.setItem('mm-mdw',(getComputedStyle(document.documentElement).getPropertyValue('--mdw')||'').trim()); }catch(e){} document.body.style.userSelect=''; } d=null; });
+})();
+(function(){ try{ const w=localStorage.getItem('mm-mdw'); if(w) document.documentElement.style.setProperty('--mdw', w); }catch(e){} })();
+
+//===================== 匯出圖片 / PDF(純前端 Canvas,無外部相依) =====================
+function _roundRect(ctx,x,y,w,h,r){ r=Math.max(0,Math.min(r,w/2,h/2)); ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function _wrapText(ctx,text,maxW){ const out=[];
+  for(const para of String(text).split('\n')){
+    if(para===''){ out.push(''); continue; }
+    const toks=para.match(/\s+|\S+/g)||[para]; let line='';
+    for(const tok of toks){ const test=line+tok;
+      if(line==='' && ctx.measureText(tok).width>maxW){ let cur='';
+        for(const ch of tok){ if(cur!=='' && ctx.measureText(cur+ch).width>maxW){ out.push(cur); cur=ch; } else cur+=ch; } line=cur;
+      } else if(ctx.measureText(test).width<=maxW || line===''){ line=test; }
+      else { out.push(line.replace(/\s+$/,'')); line=tok.replace(/^\s+/,''); } }
+    out.push(line);
+  } return out; }
+function renderMapToCanvas(){
+  if(!roots.length) return null;
+  render();
+  const w=Math.ceil(parseFloat(svg.getAttribute('width'))||1), h=Math.ceil(parseFloat(svg.getAttribute('height'))||1);
+  let sf=2; const MAX=12000; sf=Math.min(sf, MAX/w, MAX/h); if(!(sf>0)) sf=1; if(sf<0.4) sf=0.4;
+  const cv=document.createElement('canvas'); cv.width=Math.round(w*sf); cv.height=Math.round(h*sf);
+  const ctx=cv.getContext('2d'); if(!ctx) return null; ctx.scale(sf,sf);
+  const bg=((getComputedStyle(document.documentElement).getPropertyValue('--bg')||'').trim())||'#ffffff';
+  ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  svg.querySelectorAll('path').forEach(p=>{ const d=p.getAttribute('d'); if(!d) return;
+    ctx.strokeStyle=p.getAttribute('stroke')||'#9fb3c8'; ctx.lineWidth=parseFloat(p.getAttribute('stroke-width'))||1.5;
+    try{ ctx.stroke(new Path2D(d)); }catch(e){} });
+  canvas.querySelectorAll('.node').forEach(el=>{
+    const x=el.offsetLeft, y=el.offsetTop, ww=el.offsetWidth, hh=el.offsetHeight, cs=getComputedStyle(el);
+    const bw=parseFloat(cs.borderTopWidth)||0, br=parseFloat(cs.borderTopLeftRadius)||8;
+    ctx.save(); if(el.classList.contains('done')) ctx.globalAlpha=0.6;
+    _roundRect(ctx,x,y,ww,hh,br); ctx.fillStyle=cs.backgroundColor||'#ffffff'; ctx.fill();
+    if(bw>0){ _roundRect(ctx,x+bw/2,y+bw/2,ww-bw,hh-bw,Math.max(0,br-bw/2)); ctx.lineWidth=bw; ctx.strokeStyle=cs.borderTopColor||'#c2ccd8'; ctx.stroke(); }
+    const fs=parseFloat(cs.fontSize)||14, lh=fs*1.4;
+    ctx.font=(cs.fontStyle||'normal')+' '+(cs.fontWeight||'400')+' '+fs+'px '+(cs.fontFamily||'sans-serif');
+    ctx.fillStyle=cs.color||'#1f2933'; ctx.textBaseline='top';
+    const parts=[]; const ord=el.querySelector('.norder'); if(ord) parts.push(ord.textContent);
+    const ck=el.querySelector('.ckbox'); if(ck) parts.push(ck.textContent);
+    const ic=el.querySelector('.nicon'); if(ic) parts.push(ic.textContent);
+    const tx=el.querySelector('.ntext'); parts.push(tx?tx.textContent:el.textContent);
+    const padL=parseFloat(cs.paddingLeft)||12, padR=parseFloat(cs.paddingRight)||12, padT=parseFloat(cs.paddingTop)||7;
+    const sepW=Math.max(0,parts.length-1)*fs*0.5;
+    const maxW=Math.max(10, ww-bw*2-padL-padR+sepW+2);
+    const lines=_wrapText(ctx, parts.join(' ').replace(/\s+/g,' ').trim(), maxW);
+    ctx.textBaseline='middle';
+    const totalH=lines.length*lh; let ty=y+Math.max(bw+padT,(hh-totalH)/2)+lh/2;
+    for(const ln of lines){ ctx.fillText(ln, x+bw+padL, ty); ty+=lh; }
+    ctx.restore();
+  });
+  return cv;
+}
+function _dl(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); }
+function _dlData(durl,name){ const a=document.createElement('a'); a.href=durl; a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
+function _expName(ext){ const base=(currentName || (roots[0]&&(roots[0].title||'').split('\n')[0].trim()) || '心智圖'); return base+'.'+ext; }
+function exportJPG(){ const cv=renderMapToCanvas(); if(!cv){ statusEl.textContent='沒有可匯出的內容'; return; }
+  try{ if(cv.toBlob){ cv.toBlob(b=>{ b?_dl(b,_expName('jpg')):_dlData(cv.toDataURL('image/jpeg',0.92),_expName('jpg')); },'image/jpeg',0.92); }
+       else _dlData(cv.toDataURL('image/jpeg',0.92),_expName('jpg')); }
+  catch(e){ statusEl.textContent='匯出 JPG 失敗:'+e.message; } }
+function exportPDF(){ const cv=renderMapToCanvas(); if(!cv){ statusEl.textContent='沒有可匯出的內容'; return; }
+  try{ const durl=cv.toDataURL('image/jpeg',0.92), b64=durl.split(',')[1], bin=atob(b64);
+    const bytes=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+    const A4=[595.28,841.89]; const land=cv.width>cv.height;
+    const pageW=land?A4[1]:A4[0], pageH=land?A4[0]:A4[1];
+    const m=24, availW=pageW-2*m, availH=pageH-2*m, ar=cv.width/cv.height;
+    let dw=availW, dh=dw/ar; if(dh>availH){ dh=availH; dw=dh*ar; }
+    const dx=(pageW-dw)/2, dy=(pageH-dh)/2;
+    const pdf=_buildPdf(bytes, cv.width, cv.height, pageW, pageH, dx, dy, dw, dh);
+    _dl(new Blob([pdf],{type:'application/pdf'}), _expName('pdf'));
+  }catch(e){ statusEl.textContent='匯出 PDF 失敗:'+e.message; } }
+function _buildPdf(jpeg, pw, ph, pageW, pageH, dx, dy, dw, dh){
+  const enc=new TextEncoder(); const chunks=[]; let len=0; const offs=[];
+  const put=x=>{ const a=(typeof x==='string')?enc.encode(x):x; chunks.push(a); len+=a.length; };
+  const start=()=>offs.push(len);
+  put('%PDF-1.4\n');
+  start(); put('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+  start(); put('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
+  start(); put('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+pageW.toFixed(2)+' '+pageH.toFixed(2)+'] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n');
+  start(); put('4 0 obj\n<< /Type /XObject /Subtype /Image /Width '+pw+' /Height '+ph+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpeg.length+' >>\nstream\n'); put(jpeg); put('\nendstream\nendobj\n');
+  const content='q\n'+dw.toFixed(2)+' 0 0 '+dh.toFixed(2)+' '+dx.toFixed(2)+' '+dy.toFixed(2)+' cm\n/Im0 Do\nQ\n';
+  start(); put('5 0 obj\n<< /Length '+content.length+' >>\nstream\n'+content+'endstream\nendobj\n');
+  const xo=len; let xref='xref\n0 6\n0000000000 65535 f \n';
+  for(const o of offs){ xref+=String(o).padStart(10,'0')+' 00000 n \n'; }
+  put(xref); put('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xo+'\n%%EOF');
+  const outb=new Uint8Array(len); let pp=0; for(const c of chunks){ outb.set(c,pp); pp+=c.length; } return outb;
+}
+
+//===================== 選取 / 編輯 / 結構操作 =====================
+function snapshot(){ if(roots.length){ history.push(roots.map(cloneTree)); if(history.length>60) history.shift(); redoStack.length=0; } }
+function undo(){ if(history.length){ redoStack.push(roots.map(cloneTree));
+  roots=history.pop(); roots.forEach(r=>setParents(r,null));
+  const ids=[...selection].map(n=>n.id); selection=new Set();
+  ids.forEach(id=>{ const n=findByIdAll(id); if(n) selection.add(n); });
+  selected = selected ? findByIdAll(selected.id) : null;
+  render(); } }
+function redo(){ if(redoStack.length){ history.push(roots.map(cloneTree));
+  roots=redoStack.pop(); roots.forEach(r=>setParents(r,null));
+  const ids=[...selection].map(n=>n.id); selection=new Set();
+  ids.forEach(id=>{ const n=findByIdAll(id); if(n) selection.add(n); });
+  selected = selected ? findByIdAll(selected.id) : null;
+  render(); } }
+function findById(n,id){ if(n.id===id) return n; for(const c of n.children){ const r=findById(c,id); if(r) return r; } return null; }
+
+function selectOnly(node){ selection = new Set(node?[node]:[]); selected = node||null; }
+function addSelect(node){ selection.add(node); selected=node; }
+function toggleSelect(node){ if(selection.has(node)){ selection.delete(node); if(selected===node) selected=[...selection].pop()||null; } else { selection.add(node); selected=node; } }
+function clearSelection(){ selection.clear(); selected=null; }
+function isSel(node){ return selection.has(node); }
+// 取最上層的選取節點(排除其祖先也被選取者),用於整組刪除/搬移
+function topLevelSelected(set){ const arr=[...set]; return arr.filter(n=> !arr.some(m=> m!==n && isDescendant(n,m))); }
+function select(node){ selectOnly(node); render(); }
+function selectAllNodes(){ if(!roots.length) return; selection=new Set();
+  for(const r of roots) (function w(n){ selection.add(n); for(const c of n.children) w(c); })(r);
+  selected=roots[0]; render(); }
+
+function startEdit(node, dom){
+  dom.classList.add('editing'); dom.contentEditable='true';
+  // edit raw (with \n). Use innerText
+  dom.innerText = node.title;
+  const r=document.createRange(); r.selectNodeContents(dom);
+  const s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  dom.focus(); editing=true;
+  function commit(){
+    node.title = dom.innerText.replace(/ /g,' ').replace(/\n+$/,'');
+    dom.contentEditable='false'; dom.classList.remove('editing'); editing=false;
+    dom.removeEventListener('blur',commit); dom.removeEventListener('keydown',key);
+    render();
+  }
+  function key(e){
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); dom.blur(); }
+    else if(e.key==='Escape'){ e.preventDefault(); dom.innerText=node.title; dom.blur(); }
+    e.stopPropagation();
+  }
+  dom.addEventListener('blur',commit); dom.addEventListener('keydown',key);
+}
+
+function addChild(){ if(!selected) return; snapshot();
+  const n=makeNode('新節點'); n.parent=selected; selected.collapsed=false; selected.children.push(n); selectOnly(n); render(); editSelected(); }
+function addSibling(){ if(!selected) return;
+  if(!selected.parent){ addRoot(); return; }      // 根的「同層」= 新增一個中心主題
+  snapshot();
+  const p=selected.parent; const i=p.children.indexOf(selected); const n=makeNode('新節點'); n.parent=p;
+  p.children.splice(i+1,0,n); selectOnly(n); render(); editSelected(); }
+// 新增父節點:在選取節點上方插入一層,選取節點變成它的子節點
+function addParent(){ if(!selected) return; snapshot();
+  const x=selected, n=makeNode('新節點');
+  if(x.parent){ const p=x.parent; const i=p.children.indexOf(x); p.children.splice(i,1,n); n.parent=p; n.children=[x]; x.parent=n; }
+  else { const i=roots.indexOf(x); n.parent=null; n.children=[x]; x.parent=n; if(i>=0) roots.splice(i,1,n); else roots.push(n); }
+  selectOnly(n); render(); editSelected(); }
+// 新增一個中心/根節點(獨立的心智圖)
+function addRoot(){ snapshot();
+  const n=makeNode('新中心主題');
+  const i = selected ? roots.indexOf(rootOf(selected)) : -1;
+  if(i>=0) roots.splice(i+1,0,n); else roots.push(n);
+  selectOnly(n); render(); editSelected(); }
+// 把選取節點提升為獨立的中心主題(脫離原父節點)
+function detachToRoot(){
+  const nodes = topLevelSelected(selection).filter(n=>n.parent);
+  if(!nodes.length) return;
+  snapshot();
+  for(const n of nodes){ const p=n.parent; p.children.splice(p.children.indexOf(n),1); n.parent=null; roots.push(n); }
+  selectOnly(nodes[nodes.length-1]); render();
+}
+function deleteNode(){
+  const nodes = topLevelSelected(selection);   // 可整組刪除(含整個中心主題)
+  if(!nodes.length) return;
+  snapshot();
+  let fallback=null;
+  for(const n of nodes){
+    if(n.parent){ const p=n.parent; const i=p.children.indexOf(n); if(i>=0){ p.children.splice(i,1); fallback=p; } }
+    else { const i=roots.indexOf(n); if(i>=0){ roots.splice(i,1); fallback = roots[Math.min(i, roots.length-1)]||null; } }
+  }
+  selectOnly(fallback); render();
+}
+function editSelected(){ const dom=canvas.querySelector(`.node[data-id="${selected.id}"]`); if(dom) startEdit(selected,dom); }
+
+//===================== 複製 / 剪下 / 貼上 =====================
+let clipboard=null;   // 內部節點剪貼簿(node 樹陣列)
+function cloneFresh(node){ const n=makeNode(node.title); n.fill=node.fill; n.border=node.border; n.text=node.text; n.icon=node.icon; n.checked=node.checked; n.ordered=node.ordered; n.quote=node.quote; n.collapsed=node.collapsed;
+  n.children=node.children.map(cloneFresh); n.children.forEach(c=>c.parent=n); return n; }
+function copySelection(){ const tops=topLevelSelected(selection); if(!tops.length) return false; clipboard=tops.map(cloneFresh);
+  statusEl.textContent=`已複製 ${tops.length} 個節點`; return true; }
+function cutSelection(){ if(copySelection()) deleteNode(); }
+function pasteClipboard(){ if(!clipboard||!clipboard.length) return; const target=selected||roots[0]; if(!target) return;
+  snapshot(); target.collapsed=false; const added=[];
+  for(const t of clipboard){ const c=cloneFresh(t); c.parent=target; target.children.push(c); added.push(c); }
+  selection=new Set(added); selected=added[added.length-1]; render(); }
+async function pasteFromSystem(){
+  try{ const t=await navigator.clipboard.readText();
+    const lines=(t||'').split(/\r?\n/).map(s=>s.replace(/^[\s\-*•·]+/,'').trim()).filter(Boolean);
+    const target=selected||roots[0]; if(!lines.length||!target) return;
+    snapshot(); target.collapsed=false; const added=lines.map(l=>{ const c=makeNode(l); c.parent=target; target.children.push(c); return c; });
+    selection=new Set(added); selected=added[added.length-1]; render();
+  }catch(e){ statusEl.textContent='無法讀取系統剪貼簿(請先用本工具複製節點)'; }
+}
+function pasteAny(){ if(clipboard&&clipboard.length) pasteClipboard(); else pasteFromSystem(); }
+function setAllCollapsed(val){ if(!roots.length) return; snapshot();
+  for(const r of roots) (function w(n,depth){ if(depth>0 && n.children.length) n.collapsed=val; for(const c of n.children) w(c,depth+1); })(r,0);
+  render(); }
+
+//===================== 滑鼠:選取 / 拖曳改掛載 / 平移 / 縮放 =====================
+let editing=false;
+let drag=null;   // {node, dom, sx, sy, moved, target}
+let pan=null;    // {sx, sy, px, py}
+let ghost=null;
+let marq=null;
+const marqEl=document.getElementById('marquee');
+const guideEl=document.getElementById('guide');
+function refreshSelectionDom(){ const ids=new Set([...selection].map(n=>n.id));
+  canvas.querySelectorAll('.node').forEach(d=>d.classList.toggle('sel', ids.has(d.dataset.id))); }
+function clearDropTargets(){ canvas.querySelectorAll('.node.droptarget').forEach(d=>d.classList.remove('droptarget')); }
+function vrect(dom){ const r=dom.getBoundingClientRect(), v=viewport.getBoundingClientRect();
+  return {left:r.left-v.left, top:r.top-v.top, right:r.right-v.left, bottom:r.bottom-v.top,
+    cx:r.left-v.left+r.width/2, cy:r.top-v.top+r.height/2}; }
+// 引導線:從預定父節點連到插入位置,並標出順序棒
+function drawGuide(mode, target){
+  const tdom=canvas.querySelector(`.node[data-id="${target.id}"]`); if(!tdom){ clearGuide(); return; }
+  guideEl.setAttribute('width', viewport.clientWidth); guideEl.setAttribute('height', viewport.clientHeight);
+  let path, bar, dot;
+  if(orient==='h'){
+    let px,py,iy,barL,barR;
+    if(mode==='into'){                     // 變成 target 的子節點(接在最後)
+      const pr=vrect(tdom); px=pr.right; py=pr.cy;
+      const vis = target.collapsed ? [] : target.children;
+      if(vis.length){ const lc=canvas.querySelector(`.node[data-id="${vis[vis.length-1].id}"]`);
+        if(lc){ const lr=vrect(lc); iy=lr.bottom+7; barL=lr.left; barR=lr.right; } else { iy=pr.cy; barL=pr.right+34; barR=barL+56; } }
+      else { iy=pr.cy; barL=pr.right+34; barR=barL+56; }
+    } else {                               // 插在 target 的前/後(同層換順序)
+      const pdom=canvas.querySelector(`.node[data-id="${target.parent.id}"]`); if(!pdom){ clearGuide(); return; }
+      const pr=vrect(pdom), tr=vrect(tdom); px=pr.right; py=pr.cy;
+      iy = (mode==='before') ? tr.top-4 : tr.bottom+4; barL=tr.left; barR=tr.right;
+    }
+    const mx=(px+barL)/2;
+    path=`M ${px} ${py} C ${mx} ${py}, ${mx} ${iy}, ${barL} ${iy}`;
+    bar=`<line x1="${barL}" y1="${iy}" x2="${barR}" y2="${iy}" stroke="#2f6fed" stroke-width="4" stroke-linecap="round"/>`;
+    dot=`<circle cx="${barL}" cy="${iy}" r="4.5" fill="#2f6fed"/>`;
+  } else {
+    let px,py,ix,barT,barB;
+    if(mode==='into'){                     // 變成 target 的子節點(接在最右)
+      const pr=vrect(tdom); px=pr.cx; py=pr.bottom;
+      const vis = target.collapsed ? [] : target.children;
+      if(vis.length){ const lc=canvas.querySelector(`.node[data-id="${vis[vis.length-1].id}"]`);
+        if(lc){ const lr=vrect(lc); ix=lr.right+7; barT=lr.top; barB=lr.bottom; } else { ix=pr.cx; barT=pr.bottom+34; barB=barT+56; } }
+      else { ix=pr.cx; barT=pr.bottom+34; barB=barT+56; }
+    } else {                               // 插在 target 的左/右(同層換順序)
+      const pdom=canvas.querySelector(`.node[data-id="${target.parent.id}"]`); if(!pdom){ clearGuide(); return; }
+      const pr=vrect(pdom), tr=vrect(tdom); px=pr.cx; py=pr.bottom;
+      ix = (mode==='before') ? tr.left-4 : tr.right+4; barT=tr.top; barB=tr.bottom;
+    }
+    const my=(py+barT)/2;
+    path=`M ${px} ${py} C ${px} ${my}, ${ix} ${my}, ${ix} ${barT}`;
+    bar=`<line x1="${ix}" y1="${barT}" x2="${ix}" y2="${barB}" stroke="#2f6fed" stroke-width="4" stroke-linecap="round"/>`;
+    dot=`<circle cx="${ix}" cy="${barT}" r="4.5" fill="#2f6fed"/>`;
+  }
+  guideEl.innerHTML =
+    `<path d="${path}" fill="none" stroke="#2f6fed" stroke-width="2.5" stroke-dasharray="6,4"/>`+ bar + dot;
+  guideEl.style.display='block';
+}
+function clearGuide(){ guideEl.innerHTML=''; guideEl.style.display='none'; }
+
+viewport.addEventListener('mousedown', e=>{
+  if(e.button!==0) return;
+  // 點連結(無修飾鍵)→ 交給 click 開啟,不進入選取/拖曳
+  if(e.target.closest('a.mlink') && !e.shiftKey && !e.ctrlKey && !e.metaKey) return;
+  const nodeDom = e.target.closest('.node');
+  if(nodeDom && !editing){
+    const node = findByIdAll(nodeDom.dataset.id);
+    if(e.ctrlKey||e.metaKey){ toggleSelect(node); }      // 加選/取消
+    else if(e.shiftKey){ addSelect(node); }              // 加入
+    else if(!selection.has(node)){ selectOnly(node); }   // 一般點擊 → 單選
+    else { selected = node; }                            // 點已選的多選成員 → 保留群組、設為主節點
+    refreshSelectionDom(); highlightMdNode(selected);                               // 輕量更新,不重繪(保留 DOM 讓雙擊/拖曳正常)
+    drag = {node, dom:nodeDom, sx:e.clientX, sy:e.clientY, moved:false, target:null};
+    e.preventDefault();
+  } else if(!editing){
+    if(e.shiftKey){ startMarquee(e); }                   // Shift+拖背景 = 框選
+    else { pan = {sx:e.clientX, sy:e.clientY, px:panX, py:panY, moved:false}; viewport.classList.add('panning'); }
+  }
+});
+window.addEventListener('mousemove', e=>{
+  if(marq){ updateMarquee(e); return; }
+  if(drag){
+    if(!drag.moved && Math.hypot(e.clientX-drag.sx, e.clientY-drag.sy)>4){
+      drag.moved=true;
+      // 拖的是多選成員 → 整組移動;否則單一
+      drag.movers = (selection.has(drag.node) && selection.size>1) ? topLevelSelected(selection) : [drag.node];
+      const ids=new Set(drag.movers.map(n=>n.id));
+      ghost=document.createElement('div'); ghost.className='dragghost-layer';
+      canvas.querySelectorAll('.node').forEach(d=>{
+        if(ids.has(d.dataset.id)){
+          d.classList.add('dragging'); d.style.pointerEvents='none';
+          const r=d.getBoundingClientRect();
+          const cl=d.cloneNode(true);
+          cl.querySelectorAll('.toggle').forEach(t=>t.remove());
+          cl.classList.add('ghostnode'); cl.classList.remove('dragging','sel','match','match-current');
+          // 用精確的未縮放尺寸,避免取整造成文字重新折行(變形)
+          cl.style.left=r.left+'px'; cl.style.top=r.top+'px';
+          cl.style.width=(r.width/scale)+'px'; cl.style.maxWidth='none';
+          cl.style.transform=`scale(${scale})`; cl.style.transformOrigin='top left';
+          ghost.appendChild(cl);
+        }
+      });
+      document.body.appendChild(ghost);
+      drag.gx=e.clientX; drag.gy=e.clientY;
+    }
+    if(drag.moved){
+      ghost.style.transform=`translate(${e.clientX-drag.gx}px, ${e.clientY-drag.gy}px)`;
+      clearDropTargets(); clearGuide();
+      drag.target=null; drag.dropMode=null;
+      const el=document.elementFromPoint(e.clientX,e.clientY);
+      const tgtDom=el && el.closest('.node');
+      if(tgtDom){
+        const tgt=findByIdAll(tgtDom.dataset.id);
+        const movers=drag.movers||[drag.node];
+        if(tgt && !movers.includes(tgt) && !movers.some(m=>isDescendant(tgt,m))){
+          const q=tgtDom.getBoundingClientRect();
+          const rel = orient==='h' ? (e.clientY-q.top)/q.height : (e.clientX-q.left)/q.width;
+          // 可換順序的條件:目標有父節點,且其父不在被拖群組內(避免循環)
+          const canSib = tgt.parent && !movers.some(m=> m===tgt.parent || isDescendant(tgt.parent, m));
+          if(canSib && rel<0.30){ drag.dropMode='before'; drag.target=tgt; drawGuide('before', tgt); }
+          else if(canSib && rel>0.70){ drag.dropMode='after'; drag.target=tgt; drawGuide('after', tgt); }
+          else { drag.dropMode='into'; drag.target=tgt; tgtDom.classList.add('droptarget'); drawGuide('into', tgt); }
+        }
+      }
+    }
+  } else if(pan){
+    if(Math.hypot(e.clientX-pan.sx, e.clientY-pan.sy)>3) pan.moved=true;
+    panX = pan.px + (e.clientX-pan.sx);
+    panY = pan.py + (e.clientY-pan.sy);
+    applyTransform();
+  }
+});
+window.addEventListener('mouseup', e=>{
+  if(marq){ finishMarquee(e); marq=null; return; }
+  if(drag){
+    if(ghost){ ghost.remove(); ghost=null; }
+    clearDropTargets(); clearGuide();
+    canvas.querySelectorAll('.node.dragging').forEach(d=>{ d.classList.remove('dragging'); d.style.pointerEvents=''; });
+    let changed=false;
+    if(drag.moved && drag.target && drag.dropMode){
+      const detach=n=>{ if(n.parent){ const p=n.parent; p.children.splice(p.children.indexOf(n),1); } else { const i=roots.indexOf(n); if(i>=0) roots.splice(i,1); } };
+      if(drag.dropMode==='into'){
+        const movers = (drag.movers||[drag.node]).filter(n=> n!==drag.target && !isDescendant(drag.target, n));
+        if(movers.length){
+          snapshot();
+          for(const n of movers){ detach(n); n.parent=drag.target; drag.target.children.push(n); }
+          drag.target.collapsed=false; changed=true;
+        }
+      } else {  // before / after:插入成同層,換順序
+        const np=drag.target.parent;
+        const movers = (drag.movers||[drag.node]).filter(n=> n!==drag.target && np && n!==np && !isDescendant(np, n));
+        if(np && movers.length){
+          snapshot();
+          for(const n of movers){ detach(n); }
+          let idx=np.children.indexOf(drag.target);
+          if(drag.dropMode==='after') idx+=1;
+          np.children.splice(idx, 0, ...movers);
+          movers.forEach(n=>n.parent=np);
+          changed=true;
+        }
+      }
+    } else if(drag.moved && !drag.target){
+      // 拖到空白處(沒落在任何節點上)→ 脫離成獨立中心(根)
+      const overEl=document.elementFromPoint(e.clientX, e.clientY);
+      if(!(overEl && overEl.closest('.node'))){
+        const movers=(drag.movers||[drag.node]).filter(n=> n.parent);
+        if(movers.length){
+          snapshot();
+          for(const n of movers){ const p=n.parent; p.children.splice(p.children.indexOf(n),1); n.parent=null; roots.push(n); }
+          changed=true;
+        }
+      }
+    }
+    drag=null;
+    if(changed) render();   // 只有改掛載才重繪;純點擊不重繪 → 保留 DOM 讓雙擊能正常觸發編輯
+  }
+  if(pan && !pan.moved){ selectOnly(null); render(); }   // 點空白處 → 取消選取
+  pan=null; viewport.classList.remove('panning');
+});
+
+//===================== 框選(marquee) =====================
+function startMarquee(e){ marq={sx:e.clientX, sy:e.clientY}; marqEl.style.display='block'; updateMarquee(e); }
+function updateMarquee(e){
+  const r=viewport.getBoundingClientRect();
+  const x1=Math.min(marq.sx,e.clientX), y1=Math.min(marq.sy,e.clientY);
+  const x2=Math.max(marq.sx,e.clientX), y2=Math.max(marq.sy,e.clientY);
+  marqEl.style.left=(x1-r.left)+'px'; marqEl.style.top=(y1-r.top)+'px';
+  marqEl.style.width=(x2-x1)+'px'; marqEl.style.height=(y2-y1)+'px';
+}
+function finishMarquee(e){
+  marqEl.style.display='none';
+  const box={l:Math.min(marq.sx,e.clientX), t:Math.min(marq.sy,e.clientY), r:Math.max(marq.sx,e.clientX), b:Math.max(marq.sy,e.clientY)};
+  if(box.r-box.l<4 && box.b-box.t<4){ if(!e.shiftKey){ selectOnly(null); render(); } return; } // 視為點擊空白:取消選取
+  canvas.querySelectorAll('.node').forEach(d=>{
+    const q=d.getBoundingClientRect();
+    if(q.left<box.r && q.right>box.l && q.top<box.b && q.bottom>box.t){
+      const n=findByIdAll(d.dataset.id); if(n){ selection.add(n); selected=n; }
+    }
+  });
+  render();
+}
+let _lastLinkOpen=0;
+viewport.addEventListener('click', e=>{
+  const a=e.target.closest('a.mlink'); if(!a) return;
+  e.preventDefault(); e.stopPropagation();
+  const now=Date.now(); if(now-_lastLinkOpen<400) return; _lastLinkOpen=now;  // 防雙擊重複開啟
+  const href=a.getAttribute('href'); if(href) window.open(href, '_blank', 'noopener');
+});
+viewport.addEventListener('dblclick', e=>{
+  if(e.target.closest('a.mlink')) return;   // 連結上的雙擊不進入編輯
+  const nodeDom=e.target.closest('.node'); if(!nodeDom) return;
+  const node=findByIdAll(nodeDom.dataset.id);
+  selectOnly(node); refreshSelectionDom(); highlightMdNode(node);   // 輕量選取,不重繪(避免元素被換掉導致無法編輯)
+  startEdit(node, nodeDom);
+});
+viewport.addEventListener('wheel', e=>{
+  e.preventDefault();
+  // 滾輪 = 縮放(以游標為中心);Shift+滾輪 = 水平平移
+  if(e.shiftKey && !e.ctrlKey){ panX-=(e.deltaY||e.deltaX); applyTransform(); return; }
+  const rect=viewport.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top, old=scale;
+  let dy=e.deltaY; if(e.deltaMode===1) dy*=16; else if(e.deltaMode===2) dy*=rect.height;
+  const k = e.ctrlKey ? 0.01 : 0.0018;   // 觸控板捏合用較大係數;一般滑鼠滾輪較平滑
+  scale=Math.min(2.5, Math.max(0.2, scale*Math.exp(-dy*k)));
+  panX=mx-(mx-panX)*(scale/old); panY=my-(my-panY)*(scale/old);
+  applyTransform();
+},{passive:false});
+
+//===================== 觸控(手機 / 觸控板) =====================
+let touch=null, lastTap=0;
+const tdist=t=>Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY);
+viewport.addEventListener('touchstart', e=>{
+  if(editing) return;
+  if(e.touches.length===1){ const t=e.touches[0];
+    touch={mode:'pan', sx:t.clientX, sy:t.clientY, px:panX, py:panY, moved:false, node:e.target.closest('.node')}; }
+  else if(e.touches.length===2){ const r=viewport.getBoundingClientRect();
+    touch={mode:'pinch', d0:tdist(e.touches), s0:scale, px:panX, py:panY,
+      mx:(e.touches[0].clientX+e.touches[1].clientX)/2-r.left, my:(e.touches[0].clientY+e.touches[1].clientY)/2-r.top}; }
+},{passive:false});
+viewport.addEventListener('touchmove', e=>{
+  if(!touch) return; e.preventDefault();
+  if(touch.mode==='pan' && e.touches.length===1){ const t=e.touches[0];
+    if(Math.hypot(t.clientX-touch.sx, t.clientY-touch.sy)>6) touch.moved=true;
+    panX=touch.px+(t.clientX-touch.sx); panY=touch.py+(t.clientY-touch.sy); applyTransform();
+  } else if(touch.mode==='pinch' && e.touches.length===2){
+    const ns=Math.min(2.5, Math.max(0.2, touch.s0*tdist(e.touches)/touch.d0));
+    scale=ns; panX=touch.mx-(touch.mx-touch.px)*(ns/touch.s0); panY=touch.my-(touch.my-touch.py)*(ns/touch.s0); applyTransform();
+  }
+},{passive:false});
+viewport.addEventListener('touchend', e=>{
+  if(touch && touch.mode==='pan' && !touch.moved){
+    if(touch.node && roots.length){ const n=findByIdAll(touch.node.dataset.id);
+      if(n){ selectOnly(n); render();
+        const now=Date.now(); if(now-lastTap<320){ const dm=canvas.querySelector(`.node[data-id="${n.id}"]`); if(dm) startEdit(n, dm); } lastTap=now; } }
+    else { selectOnly(null); render(); }
+  }
+  if(e.touches.length===0) touch=null;
+},{passive:false});
+
+//===================== 鍵盤 =====================
+window.addEventListener('keydown', e=>{
+  const _inTa = document.activeElement && document.activeElement.tagName==='TEXTAREA';
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='f' && !_inTa){ e.preventDefault(); openSearch(); return; }
+  const ae=document.activeElement; const inField = ae && (ae.tagName==='INPUT' || ae.tagName==='TEXTAREA' || ae.isContentEditable);
+  if(editing || inField) return;
+  if((e.ctrlKey||e.metaKey) && (e.key.toLowerCase()==='y' || (e.shiftKey && e.key.toLowerCase()==='z'))){ e.preventDefault(); redo(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); undo(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='a'){ e.preventDefault(); selectAllNodes(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); exportMd(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='c'){ e.preventDefault(); copySelection(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='x'){ e.preventDefault(); cutSelection(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='v'){ e.preventDefault(); pasteAny(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='b'){ e.preventDefault(); toggleWrap('**'); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='i'){ e.preventDefault(); toggleWrap('*'); return; }
+  if(!selected) return;
+  if(e.key==='Tab'){ e.preventDefault(); if(e.shiftKey) addParent(); else addChild(); }
+  else if(e.key==='Enter'){ e.preventDefault(); addSibling(); }
+  else if(e.key==='Delete' || e.key==='Backspace'){ e.preventDefault(); deleteNode(); }
+  else if(e.key==='F2'){ e.preventDefault(); editSelected(); }
+  else if(e.key.startsWith('Arrow')){ e.preventDefault(); moveSel(e.key); }
+});
+function moveSel(key){
+  if(!selected) return;
+  // 依版面方向對應方向鍵:橫式 往父=←/往子=→/同層=↑↓;直式 往父=↑/往子=↓/同層=←→
+  const toParent = orient==='h' ? 'ArrowLeft'  : 'ArrowUp';
+  const toChild  = orient==='h' ? 'ArrowRight' : 'ArrowDown';
+  const sibPrev  = orient==='h' ? 'ArrowUp'    : 'ArrowLeft';
+  const sibNext  = orient==='h' ? 'ArrowDown'  : 'ArrowRight';
+  if(key===toParent && selected.parent){ select(selected.parent); }
+  else if(key===toChild && visibleChildren(selected).length){ select(visibleChildren(selected)[0]); }
+  else if((key===sibPrev||key===sibNext) && selected.parent){
+    const sib=selected.parent.children; let i=sib.indexOf(selected);
+    i += (key===sibPrev?-1:1); if(i>=0&&i<sib.length) select(sib[i]);
+  }
+}
+
+//===================== 匯入 / 匯出 / 新建 / 置中 =====================
+const fileInput=document.getElementById('file');
+document.getElementById('btnOpen').onclick=()=>fileInput.click();
+fileInput.onchange=e=>{ const f=e.target.files[0]; if(f) loadFile(f); fileInput.value=''; };
+function loadFile(file){
+  const r=new FileReader();
+  r.onload=()=>{ roots=parseMarkdown(String(r.result)); selectOnly(roots[0]); history.length=0; clearSearch();
+    currentName=file.name.replace(/\.(md|markdown|txt)$/i,''); render(); fit(); };   // 顏色由主題即時套用
+  r.readAsText(file,'utf-8');
+}
+let currentName=null;   // 載入檔案的原檔名(不含副檔名);null = 非由檔案載入
+function exportMd(){
+  if(!roots.length) return;
+  const md=toMarkdown(roots);   // 100% 原生 Markdown,不含顏色
+  const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  // 由檔案載入 → 用原檔名;否則用根節點標題
+  const base=(currentName || (roots[0].title||'').split('\n')[0].trim() || '心智圖');
+  a.download = base + '.md';
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+document.getElementById('btnExport').onclick=()=>exportMd();
+window.exportJPG=exportJPG; window.exportPDF=exportPDF;
+document.getElementById('btnNew').onclick=()=>{ snapshot(); const r0=makeNode('中心主題'); roots=[r0];
+  ['分支一','分支二','分支三'].forEach(t=>{ const c=makeNode(t); c.parent=r0; r0.children.push(c); });
+  selectOnly(r0); currentName=null; clearSearch(); render(); fit(); };
+document.getElementById('btnChild').onclick=addChild;
+document.getElementById('btnSibling').onclick=addSibling;
+document.getElementById('btnParent').onclick=addParent;
+document.getElementById('btnFit').onclick=fit;
+document.getElementById('btnOrient').onclick=()=>{
+  orient = orient==='h' ? 'v' : 'h';
+  try{ localStorage.setItem('mm-orient', orient); }catch(e){}
+  render(); fit();
+};
+
+// 圖示 / 待辦
+const ICONS=['⭐','🔥','✅','❗','❓','💡','📌','🎯','👍','❤️'];
+// 文字開頭的圖示 emoji 偵測(供 nodeFrom 抽取;與匯出「emoji 放進文字」對應)
+const LEAD_ICON_RE = new RegExp('^(' + ICONS.map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')\\s*');
+const iconpalEl=document.getElementById('iconpal');
+ICONS.forEach(ic=>{ const b=document.createElement('button'); b.className='tb iconbtn'; b.textContent=ic; b.title='加上 '+ic; b.onclick=()=>setIcon(ic); iconpalEl.appendChild(b); });
+function setIcon(ic){ if(!selection.size){ statusEl.textContent='請先點選節點,再加圖示'; return; } snapshot(); for(const n of selection) n.icon=ic; render(); }
+// 行內格式:對選取節點整段標題加上/移除 **粗體** / *斜體* / ~~刪除線~~(切換)
+function toggleWrap(mk){
+  if(!selection.size){ statusEl.textContent='請先點選節點再套用樣式'; return; }
+  snapshot();
+  for(const n of selection){ const t=n.title||'';
+    if(mk==='*'){ const isBold=/^\*\*[\s\S]+\*\*$/.test(t); const m=t.match(/^\*([\s\S]+)\*$/); n.title=(m && !isBold)?m[1]:'*'+t+'*'; }
+    else { const re = mk==='**' ? /^\*\*([\s\S]+)\*\*$/ : /^~~([\s\S]+)~~$/; const m=t.match(re); n.title = m ? m[1] : mk+t+mk; }
+  }
+  render();
+}
+// 連結:把選取節點包成 [文字](網址)(已是連結則換網址)
+function addLink(){
+  if(!selection.size){ statusEl.textContent='請先點選節點再加連結'; return; }
+  const url = prompt('輸入連結網址(URL):', 'https://');
+  if(!url) return;
+  snapshot();
+  for(const n of selection){ const t=n.title||''; const m=t.match(/^\[([\s\S]+)\]\(([^)]*)\)$/);
+    n.title = m ? `[${m[1]}](${url})` : `[${t||'連結'}](${url})`; }
+  render();
+}
+// 有序清單 / 引用:切換節點類型(兩者互斥)
+function toggleOrdered(){ if(!selection.size){ statusEl.textContent='請先點選節點'; return; } snapshot();
+  const add=[...selection].some(n=>!n.ordered); for(const n of selection){ if(add){ n.ordered=true; delete n.quote; } else delete n.ordered; } render(); }
+function toggleQuote(){ if(!selection.size){ statusEl.textContent='請先點選節點'; return; } snapshot();
+  const add=[...selection].some(n=>!n.quote); for(const n of selection){ if(add){ n.quote=true; delete n.ordered; } else delete n.quote; } render(); }
+document.getElementById('btnBold').onclick=()=>toggleWrap('**');
+document.getElementById('btnItalic').onclick=()=>toggleWrap('*');
+document.getElementById('btnStrike').onclick=()=>toggleWrap('~~');
+document.getElementById('btnLink').onclick=addLink;
+document.getElementById('btnOrdered').onclick=toggleOrdered;
+document.getElementById('btnQuote').onclick=toggleQuote;
+document.getElementById('btnClearIcon').onclick=()=>{ if(!selection.size) return; snapshot(); for(const n of selection){ delete n.icon; delete n.checked; } render(); };
+document.getElementById('btnTodo').onclick=()=>{
+  if(!selection.size){ statusEl.textContent='請先點選節點,再切換待辦'; return; }
+  snapshot();
+  const addAny=[...selection].some(n=>n.checked===undefined);   // 有人沒方塊 → 全部加上;否則全部移除
+  for(const n of selection){ if(addAny){ if(n.checked===undefined) n.checked=false; } else { delete n.checked; } }
+  render();
+};
+
+// XMind 經典款配色主題:深色中心 + 每條主幹一個鮮明色(實色底),子孫為該色淺色版。
+// palette 只需列出各主幹的主色(main),淺底與深色字由程式自動推算。
+const THEMES=[
+  {name:'活力分支 Vivid', branches:true, center:'#0D1B2A',
+    // 交錯排序,讓相鄰主幹色相拉開(避免橙/黃等相鄰撞色):紅→綠→藍→橙→紫→青→粉→金
+    palette:['#EF4444','#16A34A','#2F6FED','#F59E0B','#8B5CF6','#06B6D4','#EC4899','#EAB308']},
+  {name:'暖大地 Mocha', branches:true, center:'#3E2F25',
+    palette:['#B23A48','#C2703D','#C9A227','#7C8C4E','#A4632D','#8C5A3C','#B5651D','#9C6B4A']},
+  {name:'暮青 Teal', branches:true, center:'#123438',
+    palette:['#2A9D8F','#2A6F97','#3E8E7E','#4895A8','#277DA1','#43AA8B','#5AA9A3','#348AA7']},
+  {name:'蜜桃絨 Peach', branches:true, center:'#C65D3B',
+    palette:['#F4978E','#F5A65B','#EFC050','#E0A87E','#EF8354','#E8896C','#F2A65A','#DE9B6E']},
+  {name:'數位薰衣草', branches:true, center:'#2E2350',
+    palette:['#7C5CBF','#9B5DE5','#6A4C93','#5E60CE','#B5179E','#7251B5','#845EC2','#5C4D9A']},
+  {name:'生機綠', branches:true, center:'#1E3A24',
+    palette:['#43A047','#7CB342','#2E8B57','#66A61E','#1B998B','#5A9367','#8BC34A','#3C9D5A']},
+  {name:'彩虹分支 Rainbow', rainbow:true, center:'#33373F', centerText:'#FFFFFF', hueOffset:5}
+];
+const RAINBOW = THEMES.findIndex(t=>t.rainbow);
+const DEFAULT_THEME = Math.max(0, THEMES.findIndex(t=>/Vivid/.test(t.name)));   // 預設主題:活力分支 Vivid
+let curTheme = DEFAULT_THEME;   // 目前套用的主題(僅網頁顯示用,不寫入檔案);render() 每次據此上色
+// 只上色,不含 snapshot/render
+function colorizeTheme(start, t){
+  // 深色介面時,把(偏黑的)中心色調亮,避免中心節點與深色背景融在一起
+  const dark = document.documentElement.classList.contains('dark');
+  const center = dark ? mixHex(t.center, '#ffffff', 0.24) : t.center;
+  if(t.rainbow){
+    start.fill=center; start.border=center; start.text=t.centerText;
+    const n = start.children.length || 1;            // 主幹數量
+    start.children.forEach((c,i)=>{
+      const hue = (i*360/n + (t.hueOffset||0)) % 360; // 平均分佈色相:越少越散
+      const line = hslToHex(hue,70,52);
+      const txt  = hslToHex(hue,58,40);
+      (function paint(m){ m.fill='#FFFFFF'; m.border=line; m.text=txt; for(const ch of m.children) paint(ch); })(c);
+    });
+  } else if(t.branches){
+    // XMind 經典款:深色中心;每條主幹一個鮮明色(實色底),子孫用該色淺色版(淺底+同色框+深色字)
+    start.fill=center; start.border=center; start.text=t.centerText||textColor(center);
+    const pal=t.palette, n=pal.length||1;
+    start.children.forEach((c,i)=>{
+      const main = pal[i % n];
+      const light = mixHex(main, '#FFFFFF', 0.82);   // 淺色底(混 82% 白)
+      const txt   = mixHex(main, '#16202A', 0.34);   // 深色字(混向深藍黑)
+      c.fill=main; c.border=main; c.text=textColor(main);   // 主幹:實色底、自動黑/白字
+      (function paint(m){ for(const ch of m.children){ ch.fill=light; ch.border=main; ch.text=txt; paint(ch); } })(c);
+    });
+  }
+}
+document.getElementById('themeSel').onchange=function(){
+  const i=parseInt(this.value,10);
+  if(!isNaN(i) && THEMES[i]){ curTheme=i; render(); }   // 主題僅影響網頁顯示,不寫入檔案
+  this.value='';
+};
+
+//===================== 搜尋(類 XMind) =====================
+const searchBar=document.getElementById('searchBar');
+const searchInput=document.getElementById('searchInput');
+const searchCount=document.getElementById('searchCount');
+function openSearch(){ searchBar.classList.add('show'); searchInput.focus(); searchInput.select(); if(searchInput.value) runSearch(searchInput.value); }
+function closeSearch(){ searchBar.classList.remove('show'); clearSearch(); render(); }
+function clearSearch(){ searchMatches=[]; searchMatchIds=new Set(); searchIdx=-1; currentMatchId=null; updateSearchUI(); }
+function updateSearchUI(){ searchCount.textContent = searchMatches.length ? ((searchIdx+1)+'/'+searchMatches.length) : '0/0'; }
+function runSearch(q){
+  const query=(q||'').trim().toLowerCase();
+  searchMatches=[];
+  if(query && roots.length){ for(const r of roots) (function walk(n){ if((n.title||'').toLowerCase().includes(query)) searchMatches.push(n); for(const c of n.children) walk(c); })(r); }
+  searchMatchIds=new Set(searchMatches.map(n=>n.id));
+  searchIdx = searchMatches.length ? 0 : -1;
+  currentMatchId = searchIdx>=0 ? searchMatches[0].id : null;
+  updateSearchUI();
+  if(searchIdx>=0) focusMatch(); else render();
+}
+function focusMatch(){ const node=searchMatches[searchIdx]; if(!node) return;
+  let p=node.parent; while(p){ p.collapsed=false; p=p.parent; }   // 展開命中所在的收合分支
+  selectOnly(node); render(); centerOn(node); }
+function gotoMatch(delta){ if(!searchMatches.length) return;
+  searchIdx=(searchIdx+delta+searchMatches.length)%searchMatches.length;
+  currentMatchId=searchMatches[searchIdx].id; updateSearchUI(); focusMatch(); }
+function centerOn(node){ const dx=canvas._dx||0, dy=canvas._dy||0;
+  panX=viewport.clientWidth/2-(node._x+dx+node._w/2)*scale;
+  panY=viewport.clientHeight/2-(node._y+dy)*scale; applyTransform(); }
+searchInput.addEventListener('input', ()=>runSearch(searchInput.value));
+searchInput.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ e.preventDefault(); gotoMatch(e.shiftKey?-1:1); }
+  else if(e.key==='Escape'){ e.preventDefault(); closeSearch(); }
+  e.stopPropagation();
+});
+document.getElementById('searchPrev').onclick=()=>gotoMatch(-1);
+document.getElementById('searchNext').onclick=()=>gotoMatch(1);
+document.getElementById('searchClose').onclick=closeSearch;
+document.getElementById('btnSearch').onclick=()=>{ if(searchBar.classList.contains('show')) closeSearch(); else openSearch(); };
+
+//===================== 右鍵選單(整合所有工具列功能;支援子選單)=====================
+const ctxEl=document.getElementById('ctxmenu');
+let ctxSubs=[];   // 開啟中的子選單堆疊
+function closeSubsFrom(level){ while(ctxSubs.length>level){ ctxSubs.pop().remove(); } }
+function hideCtx(){ ctxEl.style.display='none'; ctxEl.innerHTML=''; closeSubsFrom(0); }
+function renderMenu(container, items, level){
+  for(const it of items){
+    if(it==='—'){ const d=document.createElement('div'); d.className='mdiv'; container.appendChild(d); continue; }
+    const b=document.createElement('button');
+    b.innerHTML = it.sub ? `${it.label}<small>▸</small>` : (it.key ? `${it.label}<small>${it.key}</small>` : it.label);
+    if(it.disabled){ b.disabled=true; container.appendChild(b); continue; }
+    if(it.sub){
+      b.addEventListener('mouseenter', ()=>{
+        closeSubsFrom(level);
+        const sub=document.createElement('div'); sub.className='ctxmenu'; sub.style.display='block';
+        renderMenu(sub, it.sub, level+1);
+        document.body.appendChild(sub); ctxSubs.push(sub);
+        const r=b.getBoundingClientRect(), sw=sub.offsetWidth, sh=sub.offsetHeight;
+        let sx=r.right-2; if(sx+sw>innerWidth-6) sx=r.left-sw+2; sx=Math.max(6,sx);
+        let sy=r.top-5; if(sy+sh>innerHeight-6) sy=Math.max(6, innerHeight-sh-6);
+        sub.style.left=sx+'px'; sub.style.top=sy+'px';
+      });
+    } else {
+      b.addEventListener('mouseenter', ()=>closeSubsFrom(level));
+      b.onclick=()=>{ hideCtx(); it.fn(); };
+    }
+    container.appendChild(b);
+  }
+}
+function showCtx(x,y,items){
+  closeSubsFrom(0); ctxEl.innerHTML=''; ctxEl.style.display='block';
+  renderMenu(ctxEl, items, 0);
+  const mw=ctxEl.offsetWidth, mh=ctxEl.offsetHeight;
+  ctxEl.style.left=Math.min(x, innerWidth-mw-8)+'px';
+  ctxEl.style.top=Math.max(6, Math.min(y, innerHeight-mh-8))+'px';
+}
+viewport.addEventListener('contextmenu', e=>{
+  e.preventDefault();
+  const nodeDom = roots.length ? e.target.closest('.node') : null;
+  const hasClip = !!(clipboard && clipboard.length);
+  const isDark = document.documentElement.classList.contains('dark');
+  const clickBtn = id => ()=>{ const el=document.getElementById(id); if(el) el.click(); };
+  const fileSub = [
+    {label:'✨ 新建', fn:clickBtn('btnNew')},
+    {label:'📂 開啟 .md…', fn:()=>fileInput.click()},
+    {label:'💾 匯出 .md', fn:exportMd},
+    {label:'🖼 匯出 JPG', fn:exportJPG},
+    {label:'📄 匯出 PDF(A4)', fn:exportPDF},
+  ];
+  const viewSub = [
+    {label: mdPanelOpen?'📝 關閉原始碼面板':'📝 原始 Markdown 面板', fn:()=>toggleMdPanel()},
+    {label:'🎯 置中', fn:fit},
+    {label:'🔍 搜尋', key:'⌃F', fn:openSearch},
+    {label:'🔀 切換方向(橫/直)', fn:clickBtn('btnOrient')},
+    {label: isDark?'☀️ 淺色介面':'🌙 深色介面', fn:()=>applyDark(!isDark)},
+  ];
+  const themeSub = THEMES.map((t,i)=>({label:(i===curTheme?'● ':'　 ')+t.name, fn:()=>{ curTheme=i; render(); }}));
+  let items;
+  if(nodeDom){
+    const node=findByIdAll(nodeDom.dataset.id);
+    if(!selection.has(node)){ selectOnly(node); render(); }
+    const multi = selection.size>1;
+    const fmtSub = [
+      {label:'粗體 **', key:'⌃B', fn:()=>toggleWrap('**')},
+      {label:'斜體 *', key:'⌃I', fn:()=>toggleWrap('*')},
+      {label:'刪除線 ~~', fn:()=>toggleWrap('~~')},
+      {label:'🔗 連結…', fn:addLink},
+    ];
+    const listSub = [
+      {label:'☑ 待辦', fn:clickBtn('btnTodo')},
+      {label:'1. 有序清單', fn:toggleOrdered},
+      {label:'❝ 引用', fn:toggleQuote},
+    ];
+    const iconSub = ICONS.map(ic=>({label:ic+'　加圖示', fn:()=>setIcon(ic)}));
+    iconSub.push('—', {label:'✕ 清除圖示/待辦', fn:clickBtn('btnClearIcon')});
+    items=[
+      {label:'＋ 子節點', key:'Tab', fn:addChild},
+      {label:'＋ 同層節點', key:'Enter', fn:addSibling},
+      {label:'＋ 父節點', key:'⇧Tab', fn:addParent},
+      '—',
+      {label:'✏️ 編輯文字', key:'F2', fn:editSelected, disabled:multi},
+      {label:'🅰 文字格式', sub:fmtSub},
+      {label:'☑ 清單', sub:listSub},
+      {label:'⭐ 圖示', sub:iconSub},
+      '—',
+      {label:'📋 複製', key:'⌃C', fn:copySelection},
+      {label:'✂️ 剪下', key:'⌃X', fn:cutSelection},
+      {label:'📥 貼上', key:'⌃V', fn:pasteAny, disabled:!hasClip},
+      {label:'🗑 刪除', key:'Del', fn:deleteNode},
+      {label:'⬆ 提升為中心主題', fn:detachToRoot, disabled:!node.parent},
+      {label: node.collapsed?'▶ 展開':'▼ 收合', fn:()=>{ node.collapsed=!node.collapsed; renderKeepingAnchor(node); }, disabled:!node.children.length},
+      '—',
+      {label:'📄 檔案', sub:fileSub},
+      {label:'👁 檢視', sub:viewSub},
+      {label:'🎨 主題', sub:themeSub},
+    ];
+  } else {
+    items=[
+      {label:'✨ 新增中心主題', fn:addRoot},
+      {label:'📥 貼上', key:'⌃V', fn:pasteAny, disabled:!hasClip},
+      '—',
+      {label:'📄 檔案', sub:fileSub},
+      {label:'👁 檢視', sub:viewSub},
+      {label:'🎨 主題', sub:themeSub},
+      '—',
+      {label:'▼ 全部展開', fn:()=>setAllCollapsed(false)},
+      {label:'▶ 全部收合', fn:()=>setAllCollapsed(true)},
+    ];
+  }
+  showCtx(e.clientX, e.clientY, items);
+});
+window.addEventListener('mousedown', e=>{ if(!ctxEl.contains(e.target) && !ctxSubs.some(s=>s.contains(e.target))) hideCtx(); });
+window.addEventListener('keydown', e=>{ if(e.key==='Escape') hideCtx(); });
+window.addEventListener('blur', hideCtx);
+
+function fit(){
+  if(!roots.length){ return; }
+  render();
+  // compute content size from svg
+  const w=parseFloat(svg.getAttribute('width'))||1, h=parseFloat(svg.getAttribute('height'))||1;
+  const vw=viewport.clientWidth, vh=viewport.clientHeight;
+  scale=Math.min(1, Math.min(vw/(w+80), vh/(h+80)));
+  scale=Math.max(0.2,Math.min(scale,1));
+  // 放得下就置中;放不下則靠左留邊(確保根節點可見)
+  panX = (w*scale <= vw) ? (vw - w*scale)/2 : 30;
+  panY = (h*scale <= vh) ? (vh - h*scale)/2 : 20;
+  applyTransform();
+}
+
+// zoom buttons
+document.getElementById('zIn').onclick=()=>{ zoomCenter(1.15); };
+document.getElementById('zOut').onclick=()=>{ zoomCenter(1/1.15); };
+document.getElementById('zReset').onclick=fit;
+function zoomCenter(f){ const vw=viewport.clientWidth/2, vh=viewport.clientHeight/2, old=scale;
+  scale=Math.min(2.5,Math.max(0.2,scale*f)); panX=vw-(vw-panX)*(scale/old); panY=vh-(vh-panY)*(scale/old); applyTransform(); }
+
+//===================== 拖放檔案 =====================
+const dropEl=document.getElementById('drop');
+['dragenter','dragover'].forEach(ev=>viewport.addEventListener(ev,e=>{e.preventDefault(); dropEl.classList.add('show');}));
+['dragleave','drop'].forEach(ev=>viewport.addEventListener(ev,e=>{e.preventDefault();
+  if(ev==='drop'||e.target===viewport) dropEl.classList.remove('show');}));
+viewport.addEventListener('drop',e=>{ e.preventDefault(); dropEl.classList.remove('show');
+  const f=e.dataTransfer.files[0]; if(f) loadFile(f); });
+
+//===================== 浮動工具視窗(拖曳 / 收合 / 記憶位置) =====================
+const FW_KEY='mm-fwpos5';   // 版號:工具視窗組成再變更(新增「清單」窗、文字窗加 S/🔗),重設一次排版
+let fwPos={}; try{ fwPos=JSON.parse(localStorage.getItem(FW_KEY))||{}; }catch(e){ fwPos={}; }
+function saveFwPos(){ try{ localStorage.setItem(FW_KEY, JSON.stringify(fwPos)); }catch(e){} }
+let fwZ=100;
+
+// 預設排版:靠左單欄、由上往下依重要性排列(檔案→編輯→檢視→配色→標記→主題);
+// 一欄放不下時自動往右開新欄。使用者拖過的視窗(已記憶位置)則沿用。
+function placeFloatWins(){
+  const gap=10; let x=14, y=12, colW=0;
+  for(const w of document.querySelectorAll('.floatwin')){
+    if(fwPos[w.id]){ w.style.left=fwPos[w.id].left+'px'; w.style.top=fwPos[w.id].top+'px'; continue; }
+    const ww=w.offsetWidth, wh=w.offsetHeight;
+    if(y>12 && y+wh>window.innerHeight-12){ y=12; x+=colW+gap; colW=0; }
+    w.style.left=x+'px'; w.style.top=y+'px';
+    y+=wh+gap; colW=Math.max(colW, ww);
+  }
+}
+// 拖曳(抓標題列;避開收合鈕)
+(function(){ let d=null, cur=null;
+  document.querySelectorAll('.fwhead').forEach(head=>{
+    head.addEventListener('mousedown', e=>{
+      if(e.target.closest('.fwcollapse')) return;
+      cur=head.closest('.floatwin'); const r=cur.getBoundingClientRect();
+      d={x:e.clientX, y:e.clientY, l:r.left, t:r.top}; cur.style.zIndex=++fwZ; e.preventDefault();
+    });
+  });
+  window.addEventListener('mousemove', e=>{ if(!d) return;
+    let nl=d.l+e.clientX-d.x, nt=d.t+e.clientY-d.y;
+    nl=Math.max(0, Math.min(nl, window.innerWidth-46));
+    nt=Math.max(0, Math.min(nt, window.innerHeight-28));
+    cur.style.left=nl+'px'; cur.style.top=nt+'px';
+  });
+  window.addEventListener('mouseup', ()=>{ if(d&&cur){
+    // 一次記住全部視窗位置,避免「部分記憶、部分自動」造成重疊
+    document.querySelectorAll('.floatwin').forEach(w=>{ fwPos[w.id]={left:parseInt(w.style.left)||0, top:parseInt(w.style.top)||0}; });
+    saveFwPos(); } d=null; cur=null; });
+})();
+// 收合
+document.querySelectorAll('.fwcollapse').forEach(b=>{
+  b.onclick=()=>{ const w=b.closest('.floatwin'); const c=w.classList.toggle('collapsed'); b.textContent=c?'＋':'–'; b.title=c?'展開':'收合'; };
+});
+// 還原工具列:清掉記憶位置與收合狀態,重新依預設排列
+function resetFloatWins(){
+  fwPos={}; try{ localStorage.removeItem(FW_KEY); }catch(e){}
+  document.querySelectorAll('.floatwin').forEach(w=>{ w.classList.remove('collapsed'); w.style.removeProperty('z-index'); });
+  document.querySelectorAll('.fwcollapse').forEach(b=>{ b.textContent='–'; b.title='收合'; });
+  placeFloatWins();
+}
+document.getElementById('btnResetUI').onclick=resetFloatWins;
+// 淺色 / 深色 介面切換(預設跟隨系統,手動切換會記住)
+function applyDark(on){ document.documentElement.classList.toggle('dark', on);
+  const b=document.getElementById('btnDark'); if(b){ b.textContent = on ? '☀️ 淺色' : '🌙 深色'; b.title = on ? '切換為淺色介面' : '切換為深色介面'; }
+  try{ localStorage.setItem('mm-dark', on?'1':'0'); }catch(e){}
+  if(typeof render==='function' && roots.length) render();   // 重新上色(中心色深淺隨介面)
+}
+(function(){ let pref=null; try{ pref=localStorage.getItem('mm-dark'); }catch(e){}
+  applyDark(pref==='1'); })();   // 預設淺色;使用者手動切換才記住深色
+document.getElementById('btnDark').onclick=()=>applyDark(!document.documentElement.classList.contains('dark'));
+placeFloatWins();
+window.addEventListener('resize', ()=>{ // 視窗縮小時把跑到畫面外的視窗拉回可見範圍
+  for(const w of document.querySelectorAll('.floatwin')){
+    const r=w.getBoundingClientRect();
+    if(r.left>window.innerWidth-46) w.style.left=(window.innerWidth-46)+'px';
+    if(r.top>window.innerHeight-28) w.style.top=(window.innerHeight-28)+'px';
+  }
+});
+
+//===================== 啟動範例 =====================
+roots = parseMarkdown(`# MD心智圖 · 使用說明
+## 🚀 三步上手
+- 第一步:雙擊任一節點即可編輯文字;Enter 完成、Esc 取消
+- 第二步:選一個節點,按 Tab 長出子節點、按 Enter 加同層節點
+- 第三步:完成後在空白處右鍵 → 檔案 → 匯出,存成 .md 保存
+- 小提醒:本工具不會自動存檔,離開前請記得匯出
+## 🖱 操作介面
+### 右鍵選單是總入口
+- 在節點上按右鍵:編輯、文字格式、清單、圖示、複製貼上、刪除、收合
+- 在空白處按右鍵:新增中心主題、貼上、檔案、檢視、主題、全部展開或收合
+- 含子選單:文字格式 / 清單 / 圖示 / 檔案 / 檢視 / 主題
+### 滑鼠與觸控
+- 拖背景 = 平移;滾輪 = 縮放;Shift+滾輪 = 水平捲動
+- 單擊 = 選取;雙擊 = 編輯;拖節點 = 搬移
+- 觸控:單指平移、雙指縮放、點兩下編輯
+## ✏️ 編輯節點
+### 新增
+- Tab:在選取節點底下長出子節點
+- Enter:在同一層再加一個節點
+- Shift+Tab:在上方插入一層父節點
+- 空白處右鍵「新增中心主題」可開另一張獨立心智圖
+### 刪除與復原
+- Del 或 Backspace:刪除選取節點(可多選一起刪)
+- Ctrl+Z 復原;Ctrl+Y 或 Ctrl+Shift+Z 重做
+### 搬移與排序
+- 拖到另一節點上面 = 改掛載(換父節點)
+- 拖到節點上緣或下緣(直式為左右)= 同層換順序
+- 拖到空白處 = 脫離成獨立中心主題
+- 方向鍵:在節點之間移動選取焦點
+### 多選
+- Ctrl+點選:逐一加選或取消
+- Shift+拖曳空白處:框選一整區
+- Ctrl+A:全選所有節點
+## 🅰 文字格式(原生 Markdown)
+- 粗體:Ctrl+B,或輸入 **文字**
+- 斜體:Ctrl+I,或輸入 *文字*
+- 刪除線:右鍵 → 文字格式,或輸入 ~~文字~~
+- 連結:[顯示文字](網址),貼上裸網址也會自動變連結;點一下開新分頁
+- Emoji 短碼:輸入 :fire: :bulb: :rocket: 會自動轉成 🔥💡🚀
+## ☑ 清單與圖示
+- 待辦:行首輸入 [ ] 或 [x],或右鍵 → 清單 → 待辦
+- [x] 這是已完成的待辦範例(點方框可切換)
+- [ ] 這是未完成的待辦範例
+- 有序清單:1. 2. 3. 會顯示序號(右鍵 → 清單 → 有序)
+- 引用備註:行首輸入 > 會變成斜體備註
+- 圖示:右鍵 → 圖示,可加 ⭐🔥✅❗💡📌🎯👍❤️ 等徽章
+## 📝 原始 Markdown 面板(雙向同步)
+- 開關:點畫面右緣的「原始碼」分頁,或右鍵 → 檢視 → 原始 Markdown 面板
+- 點節點 → 面板會高亮對應的文字列並捲動到位
+- 點文字列 → 心智圖會選取並置中對應節點
+- 即時編輯:在面板裡改 Markdown,心智圖會即時跟著更新
+- 調整:拖面板左緣可改寬度;開關與寬度都會自動記住
+## 💾 匯出與檔案
+- 匯出 .md:右鍵 → 檔案 → 匯出(或 Ctrl+S),100% 原生 Markdown
+- 匯出 JPG:右鍵 → 檔案 → 匯出 JPG,整張圖的高解析圖片
+- 匯出 PDF:右鍵 → 檔案 → 匯出 PDF,整張圖縮放置入單張 A4
+- 開啟:右鍵 → 檔案 → 開啟,或把 .md 檔直接拖進畫面
+- 新建:右鍵 → 檔案 → 新建,開一張空白心智圖
+## 🎨 配色主題
+- 右鍵 → 主題:一鍵切換整張圖配色(預設:活力分支 Vivid)
+- 顏色只是畫面視覺辨識,不會寫進 .md;載入時依主題自動上色
+- 共 7 種:Vivid / Mocha / Teal / Peach / 薰衣草 / 生機綠 / Rainbow
+## 🧭 版面與檢視
+- 方向:右鍵 → 檢視 → 切換方向,橫式(往右)或直式(往下)
+- 置中:右鍵 → 檢視 → 置中,或右下角 ＋／－ 縮放、⤢ 重置
+- 深色介面:右鍵 → 檢視 → 深色或淺色(會記住選擇)
+- 搜尋:Ctrl+F,Enter 跳下一個、Shift+Enter 跳上一個
+- 每個節點右側的圓圈 ＋／－ 可展開或收合該分支
+## ⌨️ 快速鍵一覽
+### 編輯結構
+- Tab 子節點 · Enter 同層 · Shift+Tab 父節點
+- Del 刪除 · F2 編輯文字 · 方向鍵 移動焦點
+### 復原 · 選取 · 剪貼
+- Ctrl+Z 復原 · Ctrl+Y 重做 · Ctrl+A 全選
+- Ctrl+C 複製 · Ctrl+X 剪下 · Ctrl+V 貼上
+### 格式 · 檔案
+- Ctrl+B 粗體 · Ctrl+I 斜體
+- Ctrl+F 搜尋 · Ctrl+S 匯出存檔
+
+# 多中心示範
+## 同一張畫布可放多個中心
+- 各中心彼此獨立、互不相連
+- 空白處右鍵「新增中心主題」可再開一張
+- 在任一節點右鍵「提升為中心主題」可把它獨立出來
+## 動手玩玩看
+- 雙擊我,改成你自己的文字
+- 選我之後按 Tab,幫我長一個子節點
+- 打開右側「原始碼」面板,看看我長什麼樣子`);
+selectOnly(roots[0]);
+render(); fit();   // 顏色由 render() 依目前主題即時套用(預設 Vivid)
+(function(){ let op=null; try{ op=localStorage.getItem('mm-mdopen'); }catch(e){} if(op==='1') toggleMdPanel(true); })();
+</script>
+</body>
+</html>
