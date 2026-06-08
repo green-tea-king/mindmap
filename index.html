@@ -2,8 +2,8 @@
 <!--
   ============================================================
   心智圖編輯器 (Mind Map Editor) — 單檔 HTML
-  版次 Version : 6.1
-  最後更新 Updated: 2026-06-04
+  版次 Version : 7.5
+  最後更新 Updated: 2026-06-08
   ------------------------------------------------------------
   ⚠ 維護規範(任何人或 AI 接手修改本檔,都必須遵守):
      每次修改完成後,務必同步更新「版次」與「最後更新日期」,共三處:
@@ -14,6 +14,12 @@
      版次原則:小改 +0.1,大改 +1.0。畫面左上角會顯示目前版次與日期。
   ------------------------------------------------------------
   修改紀錄 Changelog(最新在最上):
+     2026-06-08  v7.5  修正匯出圖片/PDF 的節點文字偏上問題:改用置中基線並在節點內垂直置中,文字不再貼著上緣或像被裁切。
+     2026-06-08  v7.4  匯出 PDF 改為「整張縮放置入單張 A4」(直/橫自動、置中留邊),不再產生超大頁面;JPG 仍輸出原尺寸高解析圖。
+     2026-06-08  v7.3  新增「匯出 JPG」與「匯出 PDF」(純前端 Canvas 繪製整張圖、內嵌 PDF,無外部相依);右鍵 → 檔案 內。
+     2026-06-08  v7.2  原始碼面板/匯出改為精簡排版:標題與其內容之間不再插入空行,只在中心主題之間留白,提升文字易讀性。
+     2026-06-08  v7.1  重寫啟動頁說明/示範:完整介紹介面、編輯、文字格式、清單圖示、原始碼面板、配色、版面、快速鍵與檔案匯出。
+     2026-06-08  v7.0  新增右側「原始 Markdown」面板:即時檢視/編輯原始碼,點節點或文字列雙向對應選取;另加 Ctrl+Y 重做、Ctrl+A 全選。
      2026-06-04  v6.1  所有工具列整合進右鍵選單(含子選單:文字格式/清單/圖示/檔案/檢視/主題);隱藏浮動工具列、僅留左上 brand。
                         實作上保留隱藏的工具列元素,選單呼叫既有函式/觸發隱藏按鈕,邏輯不變。
      2026-06-04  v6.0  「編輯」窗移除 刪除/復原 按鈕(Del 與 Ctrl+Z、右鍵選單仍可用)。
@@ -213,6 +219,37 @@
   html.dark .hint{ background:rgba(20,23,28,.6); color:#8b94a3; }
   html.dark #empty{ color:#8b94a3; }
   html.dark #empty b{ color:#aeb6c2; }
+  /* ===== 右側原始 Markdown 面板(雙向同步) ===== */
+  :root{ --mdw:360px; }
+  html.md-open #app{ margin-right:var(--mdw); }
+  #mdPanel{ position:fixed; top:0; right:0; bottom:0; width:var(--mdw); z-index:150; background:var(--panel);
+    border-left:1px solid var(--line); display:none; flex-direction:column; box-shadow:-4px 0 18px rgba(20,40,80,.10); }
+  html.md-open #mdPanel{ display:flex; }
+  #mdResize{ position:absolute; left:-3px; top:0; bottom:0; width:7px; cursor:col-resize; z-index:3; }
+  #mdResize:hover{ background:rgba(47,111,237,.30); }
+  #mdHead{ display:flex; align-items:center; gap:8px; padding:9px 12px; font-size:12px; font-weight:700;
+    letter-spacing:.4px; color:#5a6470; background:#eef2f7; border-bottom:1px solid var(--line); user-select:none; }
+  #mdHead .mdsp{ margin-left:auto; }
+  #mdHead button{ border:none; background:transparent; cursor:pointer; font-size:14px; color:#5a6470;
+    width:24px; height:24px; border-radius:6px; line-height:1; padding:0; }
+  #mdHead button:hover{ background:#fff; }
+  #mdWrap{ position:relative; flex:1; overflow:hidden; }
+  #mdHi{ position:absolute; left:0; right:0; top:0; height:20px; display:none; pointer-events:none; z-index:1;
+    background:rgba(47,111,237,.16); border-top:1px solid rgba(47,111,237,.38); border-bottom:1px solid rgba(47,111,237,.38); }
+  #mdText{ position:absolute; inset:0; width:100%; height:100%; resize:none; border:none; outline:none; z-index:2;
+    background:transparent; color:var(--txt); font:13px/20px ui-monospace,"Cascadia Code",Menlo,Consolas,"Courier New",monospace;
+    padding:10px 12px; white-space:pre; overflow:auto; tab-size:2; }
+  #mdInfo{ padding:6px 12px; font-size:11px; color:#9aa5b1; border-top:1px solid var(--line);
+    user-select:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #mdTab{ position:fixed; right:0; top:50%; transform:translateY(-50%); z-index:149; background:var(--accent);
+    color:#fff; border:none; cursor:pointer; writing-mode:vertical-rl; padding:14px 6px; border-radius:9px 0 0 9px;
+    font-size:12px; font-weight:700; letter-spacing:2px; box-shadow:-2px 2px 10px rgba(20,40,80,.18); }
+  #mdTab:hover{ filter:brightness(1.07); }
+  html.md-open #mdTab{ display:none; }
+  html.dark #mdHead{ background:#2b313b; color:#aeb6c2; }
+  html.dark #mdHead button{ color:#aeb6c2; }
+  html.dark #mdHead button:hover{ background:rgba(255,255,255,.12); }
+  html.dark #mdHi{ background:rgba(110,160,255,.18); border-color:rgba(110,160,255,.42); }
 </style>
 </head>
 <body>
@@ -315,11 +352,18 @@
 
 <span class="hint">🖱 右鍵叫出選單(全部功能在這)· 雙擊編輯 · 拖節點換掛載/順序 · 滾輪縮放 · 拖背景平移 · Shift+滾輪水平捲動</span>
 <input type="file" id="file" accept=".md,.markdown,.txt,text/markdown,text/plain" style="display:none">
+<button id="mdTab" title="開啟原始 Markdown 面板(雙向同步)">📝 原始碼</button>
+<div id="mdPanel">
+  <div id="mdResize"></div>
+  <div id="mdHead">📝 原始 Markdown<span class="mdsp"></span><button id="mdClose" title="關閉面板">✕</button></div>
+  <div id="mdWrap"><div id="mdHi"></div><textarea id="mdText" spellcheck="false" autocomplete="off" wrap="off"></textarea></div>
+  <div id="mdInfo">雙向同步 · 點節點或文字列會互相對應;直接編輯文字即時更新心智圖</div>
+</div>
 <script>
 "use strict";
 //===================== 版次資訊(修改本檔請同步更新,並更新檔頭註解與 Changelog)=====================
-const APP_VERSION = '6.1';        // 版次:小改 +0.1,大改 +1.0
-const APP_DATE    = '2026-06-04'; // 最後更新日期 YYYY-MM-DD
+const APP_VERSION = '7.5';        // 版次:小改 +0.1,大改 +1.0
+const APP_DATE    = '2026-06-08'; // 最後更新日期 YYYY-MM-DD
 { const v=document.getElementById('appVer'); if(v) v.textContent='v'+APP_VERSION+' · '+APP_DATE; }
 
 //===================== 資料模型 =====================
@@ -404,6 +448,7 @@ let selected = null;          // 主節點(供編輯/新增/方向鍵)
 let selection = new Set();    // 多選集合
 let scale = 1, panX = 80, panY = 0;
 const history = [];
+const redoStack = [];
 let searchMatches=[], searchMatchIds=new Set(), searchIdx=-1, currentMatchId=null;
 const STACK_GAP = 56;         // 多個根之間的間距
 // 多根輔助
@@ -423,27 +468,28 @@ function parseMarkdown(text){
     if(parent) parent.children.push(node);
     stack.push({depth, node}); last = node;
   }
-  for(const line of lines){
+  for(let li=0; li<lines.length; li++){
+    const line=lines[li];
     if(line.trim()==='') continue;
     const h = line.match(/^(#{1,6})\s+(.*)$/);
     if(h){
       const depth = h[1].length - 1;
-      if(depth===0){ cur = nodeFrom(h[2].trim()); rootsOut.push(cur); stack=[{depth:0,node:cur}]; last=cur; headingDepth=0; }
-      else { ensureRoot(); headingDepth = depth; attach(nodeFrom(h[2].trim()), depth); }
+      if(depth===0){ cur = nodeFrom(h[2].trim()); cur._srcLine=li; rootsOut.push(cur); stack=[{depth:0,node:cur}]; last=cur; headingDepth=0; }
+      else { ensureRoot(); if(cur._srcLine==null) cur._srcLine=li; headingDepth = depth; const nd=nodeFrom(h[2].trim()); nd._srcLine=li; attach(nd, depth); }
       continue;
     }
     // 有序清單 1. / 1)
     const ol = line.match(/^(\s*)\d+[.)]\s+(.*)$/);
-    if(ol){ ensureRoot(); const indent=Math.floor(ol[1].replace(/\t/g,'  ').length/2);
-      const nd=nodeFrom(ol[2]); nd.ordered=true; attach(nd, headingDepth + 1 + indent); continue; }
+    if(ol){ ensureRoot(); if(cur._srcLine==null) cur._srcLine=li; const indent=Math.floor(ol[1].replace(/\t/g,'  ').length/2);
+      const nd=nodeFrom(ol[2]); nd.ordered=true; nd._srcLine=li; attach(nd, headingDepth + 1 + indent); continue; }
     // 無序清單 - * +
     const b = line.match(/^(\s*)[-*+]\s+(.*)$/);
-    if(b){ ensureRoot(); const indent=Math.floor(b[1].replace(/\t/g,'  ').length/2);
-      attach(nodeFrom(b[2]), headingDepth + 1 + indent); continue; }
+    if(b){ ensureRoot(); if(cur._srcLine==null) cur._srcLine=li; const indent=Math.floor(b[1].replace(/\t/g,'  ').length/2);
+      const nd=nodeFrom(b[2]); nd._srcLine=li; attach(nd, headingDepth + 1 + indent); continue; }
     // 引用塊 >
     const q = line.match(/^(\s*)>\s+(.*)$/);
-    if(q){ ensureRoot(); const indent=Math.floor(q[1].replace(/\t/g,'  ').length/2);
-      const nd=nodeFrom(q[2]); nd.quote=true; attach(nd, headingDepth + 1 + indent); continue; }
+    if(q){ ensureRoot(); if(cur._srcLine==null) cur._srcLine=li; const indent=Math.floor(q[1].replace(/\t/g,'  ').length/2);
+      const nd=nodeFrom(q[2]); nd.quote=true; nd._srcLine=li; attach(nd, headingDepth + 1 + indent); continue; }
     // 續行:併入上一個節點標題
     if(last) last.title += '\n' + line.trim();
   }
@@ -454,42 +500,7 @@ function parseMarkdown(text){
 
 //===================== Markdown 輸出(100% 原生:標題/清單/任務清單/粗斜體/emoji;不含顏色)=====================
 function toMarkdown(rootsArr){
-  if(!Array.isArray(rootsArr)) rootsArr = [rootsArr];
-  const out = [];
-  const HEADING_LIMIT = 2;
-  const box = node => node.checked===undefined ? '' : (node.checked ? '[x] ' : '[ ] ');  // GFM 任務清單
-  function emit(node, prefix, cont){
-    const ls = (node.title||'').split('\n');
-    const ic = node.icon ? node.icon+' ' : '';   // 圖示 = 原生 emoji 放進文字
-    out.push(prefix + box(node) + ic + ls[0]);
-    for(let i=1;i<ls.length;i++) out.push(cont + ls[i]);
-  }
-  function bullet(node, indent){
-    const ind = '  '.repeat(indent);
-    let marker;
-    if(node.quote) marker = '> ';
-    else if(node.ordered){ const i=(node.parent?node.parent.children.indexOf(node):0)+1; marker = i+'. '; }
-    else marker = '- ';
-    emit(node, ind+marker, ind+'  ');
-    for(const c of node.children) bullet(c, indent+1);
-  }
-  function rec(node, depth){
-    // 標題層級;但有序/引用節點一律以清單輸出以保留語法
-    if(depth<=HEADING_LIMIT && node.children.length && !node.ordered && !node.quote){
-      emit(node, '#'.repeat(depth+2)+' ', '');
-      out.push('');
-      for(const c of node.children) rec(c, depth+1);
-    } else {
-      bullet(node, 0);
-    }
-  }
-  for(const rootN of rootsArr){
-    emit(rootN, '# ', '');
-    out.push('');
-    for(const c of rootN.children) rec(c, 0);
-    out.push('');   // 各中心主題之間留空行
-  }
-  return out.join('\n').replace(/\n{3,}/g,'\n\n').replace(/\n+$/,'') + '\n';
+  return buildMdRows(rootsArr).map(r=>r.t).join('\n') + '\n';
 }
 
 //===================== 版面配置(橫式樹 / 直式樹) =====================
@@ -551,7 +562,7 @@ function render(){
   // remove old node divs + toggles (keep svg)
   [...canvas.querySelectorAll('.node, .toggle')].forEach(e=>e.remove());
   svg.innerHTML='';
-  if(!roots.length){ applyTransform(); statusEl.textContent=''; return; }
+  if(!roots.length){ applyTransform(); statusEl.textContent=''; refreshMdPanel(mdTextDriven); return; }
   canvas.classList.toggle('vert', orient==='v');
   // 顏色純由主題即時套用(視覺辨識用,不存檔);新節點也會自動上色
   for(const r of roots) colorizeTheme(r, THEMES[curTheme] || THEMES[DEFAULT_THEME]);
@@ -699,6 +710,7 @@ function render(){
     + `節點 ${roots.reduce((s,r)=>s+countNodes(r),0)} 個`
     + (selection.size>1 ? ` · 已選 ${selection.size} 個`
        : (selected? ` · 已選:「${(selected.title||'').split('\n')[0].slice(0,18)}」`:''));
+  refreshMdPanel(mdTextDriven);
 }
 function countNodes(n){ let c=1; for(const ch of n.children) c+=countNodes(ch); return c; }
 // 重繪並讓 anchor 節點維持在原本的螢幕位置(scale 不變、版面不跳動)
@@ -717,9 +729,234 @@ function applyTransform(){
   viewport.style.backgroundSize = g+'px '+g+'px';
   viewport.style.backgroundPosition = panX+'px '+panY+'px';
 }
+//===================== 右側原始 Markdown 面板(雙向同步) =====================
+const MD_LH=20, MD_PAD=10;
+const mdTextEl=document.getElementById('mdText');
+const mdHiEl=document.getElementById('mdHi');
+const mdInfoEl=document.getElementById('mdInfo');
+let mdPanelOpen=false;
+let mdTextDriven=false;
+let mdLineToId=[];
+let mdIdToLine={};
+let mdActiveBlock=null;
+let mdInputTimer=null;
+function buildMdRows(rootsArr){
+  if(!Array.isArray(rootsArr)) rootsArr=[rootsArr];
+  const out=[]; const HEADING_LIMIT=2;
+  const box=node=>node.checked===undefined?'':(node.checked?'[x] ':'[ ] ');
+  const push=(t,id)=>out.push({t,id:id||null});
+  function emit(node, prefix, cont){
+    const ls=(node.title||'').split('\n'); const ic=node.icon?node.icon+' ':'';
+    push(prefix+box(node)+ic+ls[0], node.id);
+    for(let i=1;i<ls.length;i++) push(cont+ls[i], node.id);
+  }
+  function bullet(node, indent){
+    const ind='  '.repeat(indent); let marker;
+    if(node.quote) marker='> ';
+    else if(node.ordered){ const i=(node.parent?node.parent.children.indexOf(node):0)+1; marker=i+'. '; }
+    else marker='- ';
+    emit(node, ind+marker, ind+'  ');
+    for(const c of node.children) bullet(c, indent+1);
+  }
+  function rec(node, depth){
+    if(depth<=HEADING_LIMIT && node.children.length && !node.ordered && !node.quote){
+      emit(node, '#'.repeat(depth+2)+' ', '');
+      for(const c of node.children) rec(c, depth+1);
+    } else bullet(node, 0);
+  }
+  for(const rootN of rootsArr){
+    emit(rootN, '# ', ''); push('', null);
+    for(const c of rootN.children) rec(c, 0);
+    push('', null);
+  }
+  const rows=[];
+  for(const r of out){ if(r.t==='' && rows.length && rows[rows.length-1].t==='') continue; rows.push(r); }
+  while(rows.length && rows[rows.length-1].t==='') rows.pop();
+  return rows;
+}
+function lineAt(pos){ return mdTextEl.value.slice(0,pos).split('\n').length-1; }
+function rebuildLineMapFromRows(rows){
+  mdLineToId=rows.map(r=>r.id); mdIdToLine={};
+  rows.forEach((r,i)=>{ if(r.id!=null && mdIdToLine[r.id]==null) mdIdToLine[r.id]=i; });
+}
+function rebuildLineMapFromRoots(){
+  const n=mdTextEl.value.split('\n').length;
+  mdLineToId=new Array(n).fill(null); mdIdToLine={};
+  (function walk(arr){ for(const nd of arr){ if(nd._srcLine!=null && nd._srcLine<n){
+    if(mdLineToId[nd._srcLine]==null) mdLineToId[nd._srcLine]=nd.id;
+    if(mdIdToLine[nd.id]==null) mdIdToLine[nd.id]=nd._srcLine; } walk(nd.children); } })(roots);
+}
+function refreshMdPanel(fromText){
+  if(!mdPanelOpen) return;
+  if(fromText){ rebuildLineMapFromRoots(); }
+  else {
+    const rows=buildMdRows(roots); rebuildLineMapFromRows(rows);
+    const text=rows.map(r=>r.t).join('\n')+'\n';
+    if(mdTextEl.value!==text) mdTextEl.value=text;
+  }
+  if(document.activeElement!==mdTextEl){ if(selected) highlightMdNode(selected); else setActiveMdLine(null); }
+  if(mdInfoEl){ const c=roots.reduce((s,r)=>s+countNodes(r),0); mdInfoEl.textContent='雙向同步 · '+mdLineToId.length+' 行 · '+c+' 節點'; }
+}
+function setActiveMdLine(line){
+  if(line==null || line<0){ mdHiEl.style.display='none'; mdActiveBlock=null; return; }
+  let a=line,b=line; const id=mdLineToId[line];
+  if(id!=null){ while(a-1>=0 && mdLineToId[a-1]===id) a--; while(b+1<mdLineToId.length && mdLineToId[b+1]===id) b++; }
+  mdActiveBlock={a,b}; mdHiEl.style.display='block';
+  mdHiEl.style.top=(MD_PAD + a*MD_LH - mdTextEl.scrollTop)+'px';
+  mdHiEl.style.height=((b-a+1)*MD_LH)+'px';
+}
+function scrollMdLineIntoView(line){
+  const top=line*MD_LH, vh=mdTextEl.clientHeight, st=mdTextEl.scrollTop;
+  if(top < st) mdTextEl.scrollTop=top;
+  else if(top+MD_LH > st+vh-MD_PAD*2) mdTextEl.scrollTop=top+MD_LH-vh+MD_PAD*2;
+}
+function highlightMdNode(node){
+  if(!mdPanelOpen||!node) return;
+  const ln=mdIdToLine[node.id];
+  if(ln==null){ setActiveMdLine(null); return; }
+  setActiveMdLine(ln); scrollMdLineIntoView(ln);
+}
+function syncMapToMdCursor(doCenter){
+  if(!mdPanelOpen) return;
+  const line=lineAt(mdTextEl.selectionStart); setActiveMdLine(line);
+  const id=mdLineToId[line]; if(id==null) return;
+  const n=findByIdAll(id); if(!n) return;
+  if(n!==selected || selection.size!==1){ selectOnly(n); refreshSelectionDom(); }
+  if(doCenter) centerOn(n);
+}
+function commitMdText(){
+  const text=mdTextEl.value; const curLine=lineAt(mdTextEl.selectionStart);
+  snapshot(); roots=parseMarkdown(text);
+  mdTextDriven=true; render(); mdTextDriven=false;
+  const id=mdLineToId[curLine]; const n=id?findByIdAll(id):null;
+  if(n){ selectOnly(n); refreshSelectionDom(); }
+  setActiveMdLine(curLine);
+}
+function toggleMdPanel(on){
+  mdPanelOpen = (on===undefined) ? !mdPanelOpen : !!on;
+  document.documentElement.classList.toggle('md-open', mdPanelOpen);
+  try{ localStorage.setItem('mm-mdopen', mdPanelOpen?'1':'0'); }catch(e){}
+  if(mdPanelOpen) render(); else setActiveMdLine(null);
+}
+mdTextEl.addEventListener('input', ()=>{ setActiveMdLine(lineAt(mdTextEl.selectionStart));
+  clearTimeout(mdInputTimer); mdInputTimer=setTimeout(commitMdText, 350); });
+mdTextEl.addEventListener('click', ()=>syncMapToMdCursor(true));
+mdTextEl.addEventListener('keyup', e=>{ if(e.key.indexOf('Arrow')===0||e.key==='Home'||e.key==='End'||e.key==='PageUp'||e.key==='PageDown') syncMapToMdCursor(false); });
+mdTextEl.addEventListener('scroll', ()=>{ if(mdActiveBlock) mdHiEl.style.top=(MD_PAD + mdActiveBlock.a*MD_LH - mdTextEl.scrollTop)+'px'; });
+mdTextEl.addEventListener('keydown', e=>{ e.stopPropagation();
+  if(e.key==='Tab'){ e.preventDefault(); const sp=mdTextEl.selectionStart, en=mdTextEl.selectionEnd, v=mdTextEl.value;
+    mdTextEl.value=v.slice(0,sp)+'  '+v.slice(en); mdTextEl.selectionStart=mdTextEl.selectionEnd=sp+2;
+    clearTimeout(mdInputTimer); mdInputTimer=setTimeout(commitMdText, 350); } });
+document.getElementById('mdClose').onclick=()=>toggleMdPanel(false);
+document.getElementById('mdTab').onclick=()=>toggleMdPanel(true);
+(function(){ let d=null;
+  document.getElementById('mdResize').addEventListener('mousedown', e=>{
+    d={x:e.clientX, w:parseInt(getComputedStyle(document.documentElement).getPropertyValue('--mdw'))||360};
+    document.body.style.userSelect='none'; e.preventDefault(); });
+  window.addEventListener('mousemove', e=>{ if(!d) return; let w=d.w-(e.clientX-d.x);
+    w=Math.max(240,Math.min(680,w)); document.documentElement.style.setProperty('--mdw', w+'px');
+    if(mdActiveBlock) mdHiEl.style.top=(MD_PAD + mdActiveBlock.a*MD_LH - mdTextEl.scrollTop)+'px'; });
+  window.addEventListener('mouseup', ()=>{ if(d){ try{ localStorage.setItem('mm-mdw',(getComputedStyle(document.documentElement).getPropertyValue('--mdw')||'').trim()); }catch(e){} document.body.style.userSelect=''; } d=null; });
+})();
+(function(){ try{ const w=localStorage.getItem('mm-mdw'); if(w) document.documentElement.style.setProperty('--mdw', w); }catch(e){} })();
+
+//===================== 匯出圖片 / PDF(純前端 Canvas,無外部相依) =====================
+function _roundRect(ctx,x,y,w,h,r){ r=Math.max(0,Math.min(r,w/2,h/2)); ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function _wrapText(ctx,text,maxW){ const out=[];
+  for(const para of String(text).split('\n')){
+    if(para===''){ out.push(''); continue; }
+    const toks=para.match(/\s+|\S+/g)||[para]; let line='';
+    for(const tok of toks){ const test=line+tok;
+      if(line==='' && ctx.measureText(tok).width>maxW){ let cur='';
+        for(const ch of tok){ if(cur!=='' && ctx.measureText(cur+ch).width>maxW){ out.push(cur); cur=ch; } else cur+=ch; } line=cur;
+      } else if(ctx.measureText(test).width<=maxW || line===''){ line=test; }
+      else { out.push(line.replace(/\s+$/,'')); line=tok.replace(/^\s+/,''); } }
+    out.push(line);
+  } return out; }
+function renderMapToCanvas(){
+  if(!roots.length) return null;
+  render();
+  const w=Math.ceil(parseFloat(svg.getAttribute('width'))||1), h=Math.ceil(parseFloat(svg.getAttribute('height'))||1);
+  let sf=2; const MAX=12000; sf=Math.min(sf, MAX/w, MAX/h); if(!(sf>0)) sf=1; if(sf<0.4) sf=0.4;
+  const cv=document.createElement('canvas'); cv.width=Math.round(w*sf); cv.height=Math.round(h*sf);
+  const ctx=cv.getContext('2d'); if(!ctx) return null; ctx.scale(sf,sf);
+  const bg=((getComputedStyle(document.documentElement).getPropertyValue('--bg')||'').trim())||'#ffffff';
+  ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  svg.querySelectorAll('path').forEach(p=>{ const d=p.getAttribute('d'); if(!d) return;
+    ctx.strokeStyle=p.getAttribute('stroke')||'#9fb3c8'; ctx.lineWidth=parseFloat(p.getAttribute('stroke-width'))||1.5;
+    try{ ctx.stroke(new Path2D(d)); }catch(e){} });
+  canvas.querySelectorAll('.node').forEach(el=>{
+    const x=el.offsetLeft, y=el.offsetTop, ww=el.offsetWidth, hh=el.offsetHeight, cs=getComputedStyle(el);
+    const bw=parseFloat(cs.borderTopWidth)||0, br=parseFloat(cs.borderTopLeftRadius)||8;
+    ctx.save(); if(el.classList.contains('done')) ctx.globalAlpha=0.6;
+    _roundRect(ctx,x,y,ww,hh,br); ctx.fillStyle=cs.backgroundColor||'#ffffff'; ctx.fill();
+    if(bw>0){ _roundRect(ctx,x+bw/2,y+bw/2,ww-bw,hh-bw,Math.max(0,br-bw/2)); ctx.lineWidth=bw; ctx.strokeStyle=cs.borderTopColor||'#c2ccd8'; ctx.stroke(); }
+    const fs=parseFloat(cs.fontSize)||14, lh=fs*1.4;
+    ctx.font=(cs.fontStyle||'normal')+' '+(cs.fontWeight||'400')+' '+fs+'px '+(cs.fontFamily||'sans-serif');
+    ctx.fillStyle=cs.color||'#1f2933'; ctx.textBaseline='top';
+    const parts=[]; const ord=el.querySelector('.norder'); if(ord) parts.push(ord.textContent);
+    const ck=el.querySelector('.ckbox'); if(ck) parts.push(ck.textContent);
+    const ic=el.querySelector('.nicon'); if(ic) parts.push(ic.textContent);
+    const tx=el.querySelector('.ntext'); parts.push(tx?tx.textContent:el.textContent);
+    const padL=parseFloat(cs.paddingLeft)||12, padR=parseFloat(cs.paddingRight)||12, padT=parseFloat(cs.paddingTop)||7;
+    const sepW=Math.max(0,parts.length-1)*fs*0.5;
+    const maxW=Math.max(10, ww-bw*2-padL-padR+sepW+2);
+    const lines=_wrapText(ctx, parts.join(' ').replace(/\s+/g,' ').trim(), maxW);
+    ctx.textBaseline='middle';
+    const totalH=lines.length*lh; let ty=y+Math.max(bw+padT,(hh-totalH)/2)+lh/2;
+    for(const ln of lines){ ctx.fillText(ln, x+bw+padL, ty); ty+=lh; }
+    ctx.restore();
+  });
+  return cv;
+}
+function _dl(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); }
+function _dlData(durl,name){ const a=document.createElement('a'); a.href=durl; a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
+function _expName(ext){ const base=(currentName || (roots[0]&&(roots[0].title||'').split('\n')[0].trim()) || '心智圖'); return base+'.'+ext; }
+function exportJPG(){ const cv=renderMapToCanvas(); if(!cv){ statusEl.textContent='沒有可匯出的內容'; return; }
+  try{ if(cv.toBlob){ cv.toBlob(b=>{ b?_dl(b,_expName('jpg')):_dlData(cv.toDataURL('image/jpeg',0.92),_expName('jpg')); },'image/jpeg',0.92); }
+       else _dlData(cv.toDataURL('image/jpeg',0.92),_expName('jpg')); }
+  catch(e){ statusEl.textContent='匯出 JPG 失敗:'+e.message; } }
+function exportPDF(){ const cv=renderMapToCanvas(); if(!cv){ statusEl.textContent='沒有可匯出的內容'; return; }
+  try{ const durl=cv.toDataURL('image/jpeg',0.92), b64=durl.split(',')[1], bin=atob(b64);
+    const bytes=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+    const A4=[595.28,841.89]; const land=cv.width>cv.height;
+    const pageW=land?A4[1]:A4[0], pageH=land?A4[0]:A4[1];
+    const m=24, availW=pageW-2*m, availH=pageH-2*m, ar=cv.width/cv.height;
+    let dw=availW, dh=dw/ar; if(dh>availH){ dh=availH; dw=dh*ar; }
+    const dx=(pageW-dw)/2, dy=(pageH-dh)/2;
+    const pdf=_buildPdf(bytes, cv.width, cv.height, pageW, pageH, dx, dy, dw, dh);
+    _dl(new Blob([pdf],{type:'application/pdf'}), _expName('pdf'));
+  }catch(e){ statusEl.textContent='匯出 PDF 失敗:'+e.message; } }
+function _buildPdf(jpeg, pw, ph, pageW, pageH, dx, dy, dw, dh){
+  const enc=new TextEncoder(); const chunks=[]; let len=0; const offs=[];
+  const put=x=>{ const a=(typeof x==='string')?enc.encode(x):x; chunks.push(a); len+=a.length; };
+  const start=()=>offs.push(len);
+  put('%PDF-1.4\n');
+  start(); put('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+  start(); put('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
+  start(); put('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+pageW.toFixed(2)+' '+pageH.toFixed(2)+'] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n');
+  start(); put('4 0 obj\n<< /Type /XObject /Subtype /Image /Width '+pw+' /Height '+ph+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpeg.length+' >>\nstream\n'); put(jpeg); put('\nendstream\nendobj\n');
+  const content='q\n'+dw.toFixed(2)+' 0 0 '+dh.toFixed(2)+' '+dx.toFixed(2)+' '+dy.toFixed(2)+' cm\n/Im0 Do\nQ\n';
+  start(); put('5 0 obj\n<< /Length '+content.length+' >>\nstream\n'+content+'endstream\nendobj\n');
+  const xo=len; let xref='xref\n0 6\n0000000000 65535 f \n';
+  for(const o of offs){ xref+=String(o).padStart(10,'0')+' 00000 n \n'; }
+  put(xref); put('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xo+'\n%%EOF');
+  const outb=new Uint8Array(len); let pp=0; for(const c of chunks){ outb.set(c,pp); pp+=c.length; } return outb;
+}
+
 //===================== 選取 / 編輯 / 結構操作 =====================
-function snapshot(){ if(roots.length){ history.push(roots.map(cloneTree)); if(history.length>60) history.shift(); } }
-function undo(){ if(history.length){ roots=history.pop(); roots.forEach(r=>setParents(r,null));
+function snapshot(){ if(roots.length){ history.push(roots.map(cloneTree)); if(history.length>60) history.shift(); redoStack.length=0; } }
+function undo(){ if(history.length){ redoStack.push(roots.map(cloneTree));
+  roots=history.pop(); roots.forEach(r=>setParents(r,null));
+  const ids=[...selection].map(n=>n.id); selection=new Set();
+  ids.forEach(id=>{ const n=findByIdAll(id); if(n) selection.add(n); });
+  selected = selected ? findByIdAll(selected.id) : null;
+  render(); } }
+function redo(){ if(redoStack.length){ history.push(roots.map(cloneTree));
+  roots=redoStack.pop(); roots.forEach(r=>setParents(r,null));
   const ids=[...selection].map(n=>n.id); selection=new Set();
   ids.forEach(id=>{ const n=findByIdAll(id); if(n) selection.add(n); });
   selected = selected ? findByIdAll(selected.id) : null;
@@ -734,6 +971,9 @@ function isSel(node){ return selection.has(node); }
 // 取最上層的選取節點(排除其祖先也被選取者),用於整組刪除/搬移
 function topLevelSelected(set){ const arr=[...set]; return arr.filter(n=> !arr.some(m=> m!==n && isDescendant(n,m))); }
 function select(node){ selectOnly(node); render(); }
+function selectAllNodes(){ if(!roots.length) return; selection=new Set();
+  for(const r of roots) (function w(n){ selection.add(n); for(const c of n.children) w(c); })(r);
+  selected=roots[0]; render(); }
 
 function startEdit(node, dom){
   dom.classList.add('editing'); dom.contentEditable='true';
@@ -891,7 +1131,7 @@ viewport.addEventListener('mousedown', e=>{
     else if(e.shiftKey){ addSelect(node); }              // 加入
     else if(!selection.has(node)){ selectOnly(node); }   // 一般點擊 → 單選
     else { selected = node; }                            // 點已選的多選成員 → 保留群組、設為主節點
-    refreshSelectionDom();                               // 輕量更新,不重繪(保留 DOM 讓雙擊/拖曳正常)
+    refreshSelectionDom(); highlightMdNode(selected);                               // 輕量更新,不重繪(保留 DOM 讓雙擊/拖曳正常)
     drag = {node, dom:nodeDom, sx:e.clientX, sy:e.clientY, moved:false, target:null};
     e.preventDefault();
   } else if(!editing){
@@ -1032,7 +1272,7 @@ viewport.addEventListener('dblclick', e=>{
   if(e.target.closest('a.mlink')) return;   // 連結上的雙擊不進入編輯
   const nodeDom=e.target.closest('.node'); if(!nodeDom) return;
   const node=findByIdAll(nodeDom.dataset.id);
-  selectOnly(node); refreshSelectionDom();   // 輕量選取,不重繪(避免元素被換掉導致無法編輯)
+  selectOnly(node); refreshSelectionDom(); highlightMdNode(node);   // 輕量選取,不重繪(避免元素被換掉導致無法編輯)
   startEdit(node, nodeDom);
 });
 viewport.addEventListener('wheel', e=>{
@@ -1081,10 +1321,13 @@ viewport.addEventListener('touchend', e=>{
 
 //===================== 鍵盤 =====================
 window.addEventListener('keydown', e=>{
-  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='f'){ e.preventDefault(); openSearch(); return; }
-  const ae=document.activeElement; const inField = ae && (ae.tagName==='INPUT' || ae.isContentEditable);
+  const _inTa = document.activeElement && document.activeElement.tagName==='TEXTAREA';
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='f' && !_inTa){ e.preventDefault(); openSearch(); return; }
+  const ae=document.activeElement; const inField = ae && (ae.tagName==='INPUT' || ae.tagName==='TEXTAREA' || ae.isContentEditable);
   if(editing || inField) return;
+  if((e.ctrlKey||e.metaKey) && (e.key.toLowerCase()==='y' || (e.shiftKey && e.key.toLowerCase()==='z'))){ e.preventDefault(); redo(); return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); undo(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='a'){ e.preventDefault(); selectAllNodes(); return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); exportMd(); return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='c'){ e.preventDefault(); copySelection(); return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='x'){ e.preventDefault(); cutSelection(); return; }
@@ -1135,6 +1378,7 @@ function exportMd(){
   a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 document.getElementById('btnExport').onclick=()=>exportMd();
+window.exportJPG=exportJPG; window.exportPDF=exportPDF;
 document.getElementById('btnNew').onclick=()=>{ snapshot(); const r0=makeNode('中心主題'); roots=[r0];
   ['分支一','分支二','分支三'].forEach(t=>{ const c=makeNode(t); c.parent=r0; r0.children.push(c); });
   selectOnly(r0); currentName=null; clearSearch(); render(); fit(); };
@@ -1333,8 +1577,11 @@ viewport.addEventListener('contextmenu', e=>{
     {label:'✨ 新建', fn:clickBtn('btnNew')},
     {label:'📂 開啟 .md…', fn:()=>fileInput.click()},
     {label:'💾 匯出 .md', fn:exportMd},
+    {label:'🖼 匯出 JPG', fn:exportJPG},
+    {label:'📄 匯出 PDF(A4)', fn:exportPDF},
   ];
   const viewSub = [
+    {label: mdPanelOpen?'📝 關閉原始碼面板':'📝 原始 Markdown 面板', fn:()=>toggleMdPanel()},
     {label:'🎯 置中', fn:fit},
     {label:'🔍 搜尋', key:'⌃F', fn:openSearch},
     {label:'🔀 切換方向(橫/直)', fn:clickBtn('btnOrient')},
@@ -1497,54 +1744,97 @@ window.addEventListener('resize', ()=>{ // 視窗縮小時把跑到畫面外的�
 });
 
 //===================== 啟動範例 =====================
-roots = parseMarkdown(`# 心智圖編輯器
-## 一分鐘上手
-- 雙擊任一節點即可編輯文字;按 Enter 完成、Esc 取消
-- 文字支援 Markdown:**粗體**、*斜體*(工具列 B / I 或 Ctrl+B/I)
-- 任務清單:輸入開頭 [ ] 或 [x] 自動變待辦;Emoji 短碼如 :fire: :bulb: 自動轉 🔥💡
-- 連結:[文字](網址) 或直接貼網址會變底線連結,點一下開新分頁;~~刪除線~~ 也支援
-- 清單:- * + 都算子節點;1. 2. 為有序(顯示序號);> 為引用(斜體備註)
-- 選一個節點後按 Tab 新增「子節點」、按 Enter 新增「同層節點」
-- 想刪除就選起來按 Del;做錯了按 Ctrl+Z 復原
-- 空白處按住拖曳 = 平移畫面;滾輪 = 放大縮小
-## 編輯節點
-### 新增 / 刪除
-- Tab：在選取節點底下長出子節點
+roots = parseMarkdown(`# MD心智圖 · 使用說明
+## 🚀 三步上手
+- 第一步:雙擊任一節點即可編輯文字;Enter 完成、Esc 取消
+- 第二步:選一個節點,按 Tab 長出子節點、按 Enter 加同層節點
+- 第三步:完成後在空白處右鍵 → 檔案 → 匯出,存成 .md 保存
+- 小提醒:本工具不會自動存檔,離開前請記得匯出
+## 🖱 操作介面
+### 右鍵選單是總入口
+- 在節點上按右鍵:編輯、文字格式、清單、圖示、複製貼上、刪除、收合
+- 在空白處按右鍵:新增中心主題、貼上、檔案、檢視、主題、全部展開或收合
+- 含子選單:文字格式 / 清單 / 圖示 / 檔案 / 檢視 / 主題
+### 滑鼠與觸控
+- 拖背景 = 平移;滾輪 = 縮放;Shift+滾輪 = 水平捲動
+- 單擊 = 選取;雙擊 = 編輯;拖節點 = 搬移
+- 觸控:單指平移、雙指縮放、點兩下編輯
+## ✏️ 編輯節點
+### 新增
+- Tab:在選取節點底下長出子節點
 - Enter:在同一層再加一個節點
-- Del / Backspace:刪除選取的節點(可多選一起刪)
+- Shift+Tab:在上方插入一層父節點
+- 空白處右鍵「新增中心主題」可開另一張獨立心智圖
+### 刪除與復原
+- Del 或 Backspace:刪除選取節點(可多選一起刪)
+- Ctrl+Z 復原;Ctrl+Y 或 Ctrl+Shift+Z 重做
 ### 搬移與排序
-- 拖曳節點到另一個節點「上面」= 改變掛載(換父節點)
-- 拖到節點的上緣/下緣(直式為左/右)= 同層換順序
-- 拖到空白處 = 脫離成獨立的中心主題
-- 方向鍵:在節點間移動選取焦點
+- 拖到另一節點上面 = 改掛載(換父節點)
+- 拖到節點上緣或下緣(直式為左右)= 同層換順序
+- 拖到空白處 = 脫離成獨立中心主題
+- 方向鍵:在節點之間移動選取焦點
 ### 多選
-- Ctrl+點選:逐一加選 / 取消
+- Ctrl+點選:逐一加選或取消
 - Shift+拖曳空白處:框選一整區
-## 外觀與配色
-- 工具列「主題」可一鍵切換整張圖配色(預設:活力分支 Vivid)
-- 顏色只是網頁視覺辨識、不會寫進 .md;載入時依主題自動上色
-- 「標記」視窗:B/I 粗體斜體、待辦核取方塊 ☑、或加上 ⭐🔥✅ 等圖示
-## 版面與檢視
-- 「檢視 → 🔀 方向」:切換 橫式(往右)/ 直式(往下)
-- 「🎯 置中」:把整張圖縮放置中;右下角 ＋／－ 也可縮放
-- Ctrl+F 搜尋節點,Enter / Shift+Enter 跳上一個 / 下一個
-- 工具視窗可拖標題列移動、點「–」收合,位置會自動記住
-## 檔案 / 匯出(皆為原生 Markdown)
-- 「📂 開啟」或直接把 .md 檔拖進畫面即可匯入
-- 「💾 匯出」存成 100% 原生 Markdown(標題/清單/任務/粗斜體/emoji;不含顏色)
-- 「✨ 新建」開一張空白心智圖
-## 小提醒
-- 本工具不會自動存檔,完成後請記得「匯出」保存
-- 每個節點右側的圓圈 ＋／－ 可展開 / 收合該分支
-- 想要多個獨立心智圖?在空白處右鍵「✨ 新增中心主題」,或選根節點按 Enter
+- Ctrl+A:全選所有節點
+## 🅰 文字格式(原生 Markdown)
+- 粗體:Ctrl+B,或輸入 **文字**
+- 斜體:Ctrl+I,或輸入 *文字*
+- 刪除線:右鍵 → 文字格式,或輸入 ~~文字~~
+- 連結:[顯示文字](網址),貼上裸網址也會自動變連結;點一下開新分頁
+- Emoji 短碼:輸入 :fire: :bulb: :rocket: 會自動轉成 🔥💡🚀
+## ☑ 清單與圖示
+- 待辦:行首輸入 [ ] 或 [x],或右鍵 → 清單 → 待辦
+- [x] 這是已完成的待辦範例(點方框可切換)
+- [ ] 這是未完成的待辦範例
+- 有序清單:1. 2. 3. 會顯示序號(右鍵 → 清單 → 有序)
+- 引用備註:行首輸入 > 會變成斜體備註
+- 圖示:右鍵 → 圖示,可加 ⭐🔥✅❗💡📌🎯👍❤️ 等徽章
+## 📝 原始 Markdown 面板(雙向同步)
+- 開關:點畫面右緣的「原始碼」分頁,或右鍵 → 檢視 → 原始 Markdown 面板
+- 點節點 → 面板會高亮對應的文字列並捲動到位
+- 點文字列 → 心智圖會選取並置中對應節點
+- 即時編輯:在面板裡改 Markdown,心智圖會即時跟著更新
+- 調整:拖面板左緣可改寬度;開關與寬度都會自動記住
+## 💾 匯出與檔案
+- 匯出 .md:右鍵 → 檔案 → 匯出(或 Ctrl+S),100% 原生 Markdown
+- 匯出 JPG:右鍵 → 檔案 → 匯出 JPG,整張圖的高解析圖片
+- 匯出 PDF:右鍵 → 檔案 → 匯出 PDF,整張圖縮放置入單張 A4
+- 開啟:右鍵 → 檔案 → 開啟,或把 .md 檔直接拖進畫面
+- 新建:右鍵 → 檔案 → 新建,開一張空白心智圖
+## 🎨 配色主題
+- 右鍵 → 主題:一鍵切換整張圖配色(預設:活力分支 Vivid)
+- 顏色只是畫面視覺辨識,不會寫進 .md;載入時依主題自動上色
+- 共 7 種:Vivid / Mocha / Teal / Peach / 薰衣草 / 生機綠 / Rainbow
+## 🧭 版面與檢視
+- 方向:右鍵 → 檢視 → 切換方向,橫式(往右)或直式(往下)
+- 置中:右鍵 → 檢視 → 置中,或右下角 ＋／－ 縮放、⤢ 重置
+- 深色介面:右鍵 → 檢視 → 深色或淺色(會記住選擇)
+- 搜尋:Ctrl+F,Enter 跳下一個、Shift+Enter 跳上一個
+- 每個節點右側的圓圈 ＋／－ 可展開或收合該分支
+## ⌨️ 快速鍵一覽
+### 編輯結構
+- Tab 子節點 · Enter 同層 · Shift+Tab 父節點
+- Del 刪除 · F2 編輯文字 · 方向鍵 移動焦點
+### 復原 · 選取 · 剪貼
+- Ctrl+Z 復原 · Ctrl+Y 重做 · Ctrl+A 全選
+- Ctrl+C 複製 · Ctrl+X 剪下 · Ctrl+V 貼上
+### 格式 · 檔案
+- Ctrl+B 粗體 · Ctrl+I 斜體
+- Ctrl+F 搜尋 · Ctrl+S 匯出存檔
 
 # 多中心示範
-## 這是第二個中心主題
-- 同一張畫布可以有多個中心
-- 各自獨立、互不相連
-- 在節點上右鍵可「⬆ 提升為中心主題」`);
+## 同一張畫布可放多個中心
+- 各中心彼此獨立、互不相連
+- 空白處右鍵「新增中心主題」可再開一張
+- 在任一節點右鍵「提升為中心主題」可把它獨立出來
+## 動手玩玩看
+- 雙擊我,改成你自己的文字
+- 選我之後按 Tab,幫我長一個子節點
+- 打開右側「原始碼」面板,看看我長什麼樣子`);
 selectOnly(roots[0]);
 render(); fit();   // 顏色由 render() 依目前主題即時套用(預設 Vivid)
+(function(){ let op=null; try{ op=localStorage.getItem('mm-mdopen'); }catch(e){} if(op==='1') toggleMdPanel(true); })();
 </script>
 </body>
 </html>
